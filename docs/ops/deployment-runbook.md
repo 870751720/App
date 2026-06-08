@@ -29,7 +29,7 @@ ssh root@43.110.116.98
 - 通过 SSH 同步生产 `.env`、`docker-compose.prod.yml` 和 `Caddyfile`。
 - 在服务器执行 `docker compose pull` 和 `docker compose up -d`。
 
-当前 CI 和镜像发布已经跑通。自动 deploy job 仍依赖仓库 Actions Secrets/Variables 配置。
+当前 CI 和镜像发布已经跑通。自动 deploy job 由仓库变量 `DEPLOY_ENABLED` 控制，只有设置为 `true` 时才会执行；未配置生产密钥前保持关闭，避免镜像发布成功后因为缺少部署密钥导致整个 workflow 标红。
 
 ## GitHub Secrets
 
@@ -61,6 +61,7 @@ C:\Users\Gavin\.ssh\id_rsa
 - `API_HOST`
 - `API_PORT`
 - `COMPOSE_PROJECT_NAME`
+- `DEPLOY_ENABLED`
 - `DEPLOY_PATH`
 - `MYSQL_DATABASE`
 - `MYSQL_USER`
@@ -74,6 +75,7 @@ C:\Users\Gavin\.ssh\id_rsa
 API_HOST=0.0.0.0
 API_PORT=3001
 COMPOSE_PROJECT_NAME=app
+DEPLOY_ENABLED=true
 DEPLOY_PATH=app
 MYSQL_DATABASE=app
 MYSQL_USER=app
@@ -90,7 +92,7 @@ WEB_ORIGIN=http://43.110.116.98
 Resource not accessible by personal access token
 ```
 
-需要在 GitHub PAT 权限中补齐当前仓库的 Actions Secrets/Variables 写权限，或手动在 GitHub 仓库 Settings 中填入上述 Secrets/Variables。
+需要在 GitHub PAT 权限中补齐当前仓库的 Actions Secrets/Variables 写权限，或手动在 GitHub 仓库 Settings 中填入上述 Secrets/Variables。配置完成前不要设置 `DEPLOY_ENABLED=true`；配置完成后再开启自动部署。
 
 ## 手动兜底部署
 

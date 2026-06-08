@@ -244,6 +244,7 @@ $env:GITHUB_TOKEN = (Get-Content D:\App\.secrets\github.env | Where-Object { $_ 
 
 - `API_PORT`
 - `COMPOSE_PROJECT_NAME`
+- `DEPLOY_ENABLED`
 - `MYSQL_DATABASE`
 - `MYSQL_USER`
 - `SERVER_PORT`
@@ -252,6 +253,8 @@ $env:GITHUB_TOKEN = (Get-Content D:\App\.secrets\github.env | Where-Object { $_ 
 - `DEPLOY_PATH`
 - `WEB_IMAGE`
 - `API_IMAGE`
+
+`DEPLOY_ENABLED` 用于控制 `docker.yml` 的自动部署 job。未配置生产 Secrets 时保持关闭；配置完成后设为 `true`，镜像发布成功后才会通过 SSH 部署到服务器。
 
 后续如果区分开发、测试和生产环境，使用 GitHub Environments 管理环境级 secrets 和 variables。生产环境可以开启部署审批，避免生产密钥在非生产流程中暴露。
 
