@@ -220,7 +220,15 @@ CI/CD 使用 GitHub Actions。
 
 项目统一使用 GitHub Actions 的 Secrets 和 Variables 管理 CI/CD 配置，类似 GitLab 的 CI/CD Variables。
 
-个人访问令牌（PAT）只用于临时本地操作，不写入仓库、不写入文档明文、不提交到服务器部署目录。仓库推送优先使用本机 SSH 凭据；如果必须临时使用 PAT，只应放在当前 shell 进程的环境变量中，用完立即在 GitHub 删除或轮换。
+个人访问令牌（PAT）用于本机持续 GitHub 操作时，存放在仓库根目录外观路径下的本地文件 `D:\App\.secrets\github.env`。该文件使用 `GITHUB_TOKEN=...` 格式，只保存在本机，`.secrets/` 已加入 `.gitignore`，禁止提交到仓库，也不复制到服务器部署目录。
+
+需要在 PowerShell 中使用该令牌时，从本地文件读取到当前进程环境变量：
+
+```powershell
+$env:GITHUB_TOKEN = (Get-Content D:\App\.secrets\github.env | Where-Object { $_ -like 'GITHUB_TOKEN=*' }).Split('=', 2)[1]
+```
+
+文档只记录存储位置和读取方式，不记录令牌明文。仓库推送优先使用本机 SSH 凭据；需要调用 GitHub API 或配置仓库资源时，再从该文件读取 PAT。
 
 敏感信息放 GitHub Actions Secrets，例如：
 
