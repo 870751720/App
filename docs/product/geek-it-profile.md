@@ -51,7 +51,7 @@ Web 作为主要体验入口，包含以下区块：
 
 UI 只负责展示和轻量交互，不在组件内散落核心展示数据。
 
-API 提供 `GET /profile` 返回同一份展示内容，并使用 `packages/schemas/src/profile.ts` 做响应校验。Web 和 App 启动时优先通过 `packages/api-client` 调用 `/profile`，请求失败时回退到本地共享内容，保证服务器短暂不可用时首屏仍可展示。
+API 提供 `GET /profile` 返回同一份展示内容，并使用 `packages/schemas/src/profile.ts` 做响应校验。公网 Web 默认通过 Caddy 的 `/api/profile` 同源路径访问；服务器也兼容直连 `/profile`。Web 和 App 启动时优先通过 `packages/api-client` 调用 profile 接口，请求失败时回退到本地共享内容，保证服务器短暂不可用时首屏仍可展示。
 
 ## 设计方向
 
@@ -66,7 +66,7 @@ API 提供 `GET /profile` 返回同一份展示内容，并使用 `packages/sche
 - `pnpm typecheck` 通过。
 - `pnpm build` 通过。
 - Web 首屏不依赖 `localhost` API，生产默认通过 `/api` 同源访问。
-- `GET /profile` 返回个人站展示内容，Web/App 通过 `api-client` 调用并具备本地回退。
+- `GET /api/profile` 和 `GET /profile` 返回个人站展示内容，Web/App 通过 `api-client` 调用并具备本地回退。
 - App 可以在本地 Expo 环境编译类型检查。
 - GitHub Actions 部署所需的 Secrets 和 Variables 有明确清单。
 - 服务器可以通过 SSH 访问并具备 Docker 与 Docker Compose。
