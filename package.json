@@ -4,9 +4,9 @@
   "private": true,
   "packageManager": "pnpm@10.33.2",
   "scripts": {
-    "build": "pnpm -r --if-present build",
+    "build": "pnpm --filter @app/api prisma:generate && pnpm -r --if-present build",
     "lint": "pnpm -r --if-present lint",
-    "typecheck": "pnpm --filter @app/schemas build && pnpm --filter @app/domain build && pnpm --filter @app/api-client build && pnpm -r --if-present typecheck",
+    "typecheck": "pnpm --filter @app/api prisma:generate && pnpm --filter @app/schemas build && pnpm --filter @app/domain build && pnpm --filter @app/api-client build && pnpm -r --if-present typecheck",
     "test": "pnpm -r --if-present test"
   },
   "devDependencies": {
