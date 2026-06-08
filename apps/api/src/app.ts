@@ -1,6 +1,7 @@
 import cors from "@fastify/cors";
 import Fastify from "fastify";
 import { registerHealthRoutes } from "./routes/health.js";
+import { registerProfileRoutes } from "./routes/profile.js";
 
 export interface CreateApiAppOptions {
   webOrigin: string;
@@ -16,6 +17,7 @@ export async function createApiApp({ webOrigin }: CreateApiAppOptions) {
   });
 
   await registerHealthRoutes(app);
+  await registerProfileRoutes(app);
 
   return app;
 }

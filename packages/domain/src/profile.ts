@@ -23,14 +23,37 @@ export interface JournalEntry {
   summary: string;
 }
 
-export const profileHero = {
+export interface ProfileHero {
+  handle: string;
+  title: string;
+  summary: string;
+  primaryAction: string;
+  secondaryAction: string;
+}
+
+export interface ContactPreference {
+  title: string;
+  summary: string;
+  channels: string[];
+}
+
+export interface ProfileContent {
+  hero: ProfileHero;
+  metrics: ProfileMetric[];
+  stackAreas: StackArea[];
+  projects: ProfileProject[];
+  journalEntries: JournalEntry[];
+  contactPreference: ContactPreference;
+}
+
+export const profileHero: ProfileHero = {
   handle: "Night-shift builder",
   title: "把想法打磨成能上线的产品系统",
   summary:
     "一个偏工程实战的 IT 男生个人站：关注 React、移动端、后端 API、Docker 部署和 AI 辅助开发，把灵感整理成可运行、可维护、可继续迭代的版本。",
   primaryAction: "查看项目",
   secondaryAction: "检查在线状态"
-} as const;
+};
 
 export const profileMetrics: ProfileMetric[] = [
   {
@@ -112,9 +135,18 @@ export const journalEntries: JournalEntry[] = [
   }
 ];
 
-export const contactPreference = {
+export const contactPreference: ContactPreference = {
   title: "异步优先，结果导向",
   summary:
     "适合聊产品原型、全栈实现、部署排障和 AI 辅助开发工作流。先把目标和当前阻塞说清楚，再进入实现细节。",
   channels: ["GitHub", "Email", "Issue-first collaboration"]
-} as const;
+};
+
+export const profileContent: ProfileContent = {
+  hero: profileHero,
+  metrics: profileMetrics,
+  stackAreas,
+  projects: profileProjects,
+  journalEntries,
+  contactPreference
+};

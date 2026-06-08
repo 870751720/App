@@ -1,4 +1,9 @@
-import { healthStatusSchema, type HealthStatus } from "@app/schemas";
+import {
+  healthStatusSchema,
+  profileContentSchema,
+  type HealthStatus,
+  type ProfileContentResponse
+} from "@app/schemas";
 
 export interface ApiClientOptions {
   baseUrl: string;
@@ -18,6 +23,17 @@ export function createApiClient({ baseUrl, fetcher = fetch }: ApiClientOptions) 
 
       const payload: unknown = await response.json();
       return healthStatusSchema.parse(payload);
+    },
+
+    async getProfile(): Promise<ProfileContentResponse> {
+      const response = await fetcher(`${normalizedBaseUrl}/profile`);
+
+      if (!response.ok) {
+        throw new Error(`Profile request failed with status ${response.status}`);
+      }
+
+      const payload: unknown = await response.json();
+      return profileContentSchema.parse(payload);
     }
   };
 }

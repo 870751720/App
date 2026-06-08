@@ -11,10 +11,8 @@ import { createApiClient } from "@app/api-client";
 import {
   contactPreference,
   getPublicAppStatus,
-  profileHero,
-  profileMetrics,
-  profileProjects,
-  stackAreas
+  profileContent,
+  type ProfileContent
 } from "@app/domain";
 
 type HealthView =
@@ -26,6 +24,7 @@ const apiBaseUrl = "http://43.110.116.98/api";
 
 export default function App() {
   const [health, setHealth] = useState<HealthView>({ state: "loading" });
+  const [profile, setProfile] = useState<ProfileContent>(profileContent);
   const publicStatus = getPublicAppStatus(false);
   const apiClient = useMemo(() => createApiClient({ baseUrl: apiBaseUrl }), []);
 
@@ -48,6 +47,19 @@ export default function App() {
         }
       });
 
+    apiClient
+      .getProfile()
+      .then((result) => {
+        if (isMounted) {
+          setProfile(result);
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setProfile(profileContent);
+        }
+      });
+
     return () => {
       isMounted = false;
     };
@@ -57,9 +69,9 @@ export default function App() {
     <SafeAreaView style={styles.screen}>
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.hero}>
-          <Text style={styles.eyebrow}>{profileHero.handle}</Text>
-          <Text style={styles.title}>{profileHero.title}</Text>
-          <Text style={styles.summary}>{profileHero.summary}</Text>
+          <Text style={styles.eyebrow}>{profile.hero.handle}</Text>
+          <Text style={styles.title}>{profile.hero.title}</Text>
+          <Text style={styles.summary}>{profile.hero.summary}</Text>
         </View>
 
         <View style={styles.statusPanel}>
@@ -69,7 +81,7 @@ export default function App() {
         </View>
 
         <Section title="Signals">
-          {profileMetrics.map((metric) => (
+          {profile.metrics.map((metric) => (
             <Card key={metric.label}>
               <Text style={styles.cardLabel}>{metric.label}</Text>
               <Text style={styles.cardTitle}>{metric.value}</Text>
@@ -79,7 +91,7 @@ export default function App() {
         </Section>
 
         <Section title="Stack">
-          {stackAreas.map((area) => (
+          {profile.stackAreas.map((area) => (
             <Card key={area.title}>
               <Text style={styles.cardTitle}>{area.title}</Text>
               <Text style={styles.cardText}>{area.summary}</Text>
@@ -95,7 +107,7 @@ export default function App() {
         </Section>
 
         <Section title="Projects">
-          {profileProjects.map((project) => (
+          {profile.projects.map((project) => (
             <Card key={project.name}>
               <Text style={styles.cardLabel}>{project.status}</Text>
               <Text style={styles.cardTitle}>{project.name}</Text>
@@ -106,8 +118,8 @@ export default function App() {
 
         <View style={styles.contact}>
           <Text style={styles.cardLabel}>Contact</Text>
-          <Text style={styles.cardTitle}>{contactPreference.title}</Text>
-          <Text style={styles.cardText}>{contactPreference.summary}</Text>
+          <Text style={styles.cardTitle}>{profile.contactPreference.title}</Text>
+          <Text style={styles.cardText}>{profile.contactPreference.summary}</Text>
         </View>
       </ScrollView>
     </SafeAreaView>

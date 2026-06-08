@@ -17,11 +17,8 @@ import { createApiClient } from "@app/api-client";
 import {
   contactPreference,
   getPublicAppStatus,
-  journalEntries,
-  profileHero,
-  profileMetrics,
-  profileProjects,
-  stackAreas
+  profileContent,
+  type ProfileContent
 } from "@app/domain";
 import heroImage from "./assets/geek-workstation-hero.png";
 import { Button } from "./components/ui/button";
@@ -35,6 +32,7 @@ const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? "/api";
 
 export function App() {
   const [health, setHealth] = useState<HealthView>({ state: "loading" });
+  const [profile, setProfile] = useState<ProfileContent>(profileContent);
   const publicStatus = getPublicAppStatus(false);
   const apiClient = useMemo(() => createApiClient({ baseUrl: apiBaseUrl }), []);
 
@@ -57,6 +55,19 @@ export function App() {
         }
       });
 
+    apiClient
+      .getProfile()
+      .then((result) => {
+        if (isMounted) {
+          setProfile(result);
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setProfile(profileContent);
+        }
+      });
+
     return () => {
       isMounted = false;
     };
@@ -64,21 +75,23 @@ export function App() {
 
   return (
     <main className="min-h-screen bg-[#0c1117] text-slate-100">
-      <Hero health={health} publicStatus={publicStatus} />
-      <SignalBoard health={health} publicStatus={publicStatus} />
-      <StackSection />
-      <ProjectsSection />
-      <JournalSection />
-      <ContactSection />
+      <Hero health={health} profile={profile} publicStatus={publicStatus} />
+      <SignalBoard health={health} profile={profile} publicStatus={publicStatus} />
+      <StackSection profile={profile} />
+      <ProjectsSection profile={profile} />
+      <JournalSection profile={profile} />
+      <ContactSection profile={profile} />
     </main>
   );
 }
 
 function Hero({
   health,
+  profile,
   publicStatus
 }: {
   health: HealthView;
+  profile: ProfileContent;
   publicStatus: string;
 }) {
   return (
@@ -121,25 +134,25 @@ function Hero({
           >
             <p className="mb-4 inline-flex items-center gap-2 rounded-md border border-teal-300/30 bg-teal-300/10 px-3 py-2 text-sm font-semibold text-teal-200">
               <Radio aria-hidden="true" className="size-4" />
-              {profileHero.handle}
+              {profile.hero.handle}
             </p>
             <h1 className="text-[2rem] font-black leading-tight text-white [word-break:break-all] sm:text-5xl lg:text-7xl">
-              {profileHero.title}
+              {profile.hero.title}
             </h1>
             <p className="mt-6 max-w-2xl text-base leading-8 text-slate-300 [word-break:break-all] sm:text-lg">
-              {profileHero.summary}
+              {profile.hero.summary}
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Button asChild size="lg">
                 <a href="#projects">
                   <Rocket aria-hidden="true" className="size-4" />
-                  {profileHero.primaryAction}
+                  {profile.hero.primaryAction}
                 </a>
               </Button>
               <Button asChild variant="secondary" size="lg">
                 <a href="#status">
                   <Activity aria-hidden="true" className="size-4" />
-                  {profileHero.secondaryAction}
+                  {profile.hero.secondaryAction}
                 </a>
               </Button>
             </div>
@@ -168,9 +181,11 @@ function Hero({
 
 function SignalBoard({
   health,
+  profile,
   publicStatus
 }: {
   health: HealthView;
+  profile: ProfileContent;
   publicStatus: string;
 }) {
   return (
@@ -186,7 +201,7 @@ function SignalBoard({
           </div>
         </div>
       </Panel>
-      {profileMetrics.map((metric) => (
+      {profile.metrics.map((metric) => (
         <Panel key={metric.label}>
           <p className="text-sm text-slate-400">{metric.label}</p>
           <p className="mt-2 text-xl font-black text-white">{metric.value}</p>
@@ -197,7 +212,7 @@ function SignalBoard({
   );
 }
 
-function StackSection() {
+function StackSection({ profile }: { profile: ProfileContent }) {
   return (
     <section id="stack" className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
       <SectionHeader
@@ -206,7 +221,7 @@ function StackSection() {
         summary="偏实战的全栈组合，优先服务快速验证、清晰边界和单机部署。"
       />
       <div className="mt-6 grid gap-4 md:grid-cols-2">
-        {stackAreas.map((area) => (
+        {profile.stackAreas.map((area) => (
           <Panel key={area.title}>
             <div className="flex items-start justify-between gap-4">
               <div>
@@ -229,7 +244,7 @@ function StackSection() {
   );
 }
 
-function ProjectsSection() {
+function ProjectsSection({ profile }: { profile: ProfileContent }) {
   return (
     <section id="projects" className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
       <SectionHeader
@@ -238,7 +253,7 @@ function ProjectsSection() {
         summary="首版先展示可继续迭代的项目方向，后续可以替换为真实仓库、截图和线上地址。"
       />
       <div className="mt-6 grid gap-4 lg:grid-cols-3">
-        {profileProjects.map((project) => (
+        {profile.projects.map((project) => (
           <Panel key={project.name} className="flex min-h-64 flex-col justify-between">
             <div>
               <p className="text-sm font-semibold text-teal-200">{project.status}</p>
@@ -259,7 +274,7 @@ function ProjectsSection() {
   );
 }
 
-function JournalSection() {
+function JournalSection({ profile }: { profile: ProfileContent }) {
   return (
     <section id="journal" className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
       <SectionHeader
@@ -268,7 +283,7 @@ function JournalSection() {
         summary="把关键迭代记录下来，方便第二天继续接着做，而不是靠记忆恢复上下文。"
       />
       <div className="mt-6 grid gap-3">
-        {journalEntries.map((entry) => (
+        {profile.journalEntries.map((entry) => (
           <Panel key={`${entry.date}-${entry.title}`} className="grid gap-3 md:grid-cols-[150px_minmax(0,1fr)]">
             <time className="text-sm font-semibold text-amber-200">{entry.date}</time>
             <div>
@@ -282,7 +297,9 @@ function JournalSection() {
   );
 }
 
-function ContactSection() {
+function ContactSection({ profile }: { profile: ProfileContent }) {
+  const contactPreference = profile.contactPreference;
+
   return (
     <section className="mx-auto w-full max-w-7xl px-4 pb-16 pt-12 sm:px-6 lg:px-8">
       <div className="grid gap-5 rounded-lg border border-teal-300/20 bg-teal-300/10 p-5 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
