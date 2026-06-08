@@ -4,9 +4,9 @@
 
 在执行任何代码修改前，必须先阅读：
 
-- [docs/ai/architecture-rules.md](docs/ai/architecture-rules.md)
-
-这些规则用于约束 AI 的代码组织方式，避免把功能堆进巨型文件、万能函数或临时目录。
+- docs/ai/architecture-rules.md
+- docs/architecture/technical-decisions.md
+- README.md
 
 ## 工作方式
 

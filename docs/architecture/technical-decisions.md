@@ -1,0 +1,194 @@
+# 技术方案与决策记录
+
+本文档记录当前项目的技术选型、架构边界和暂不采用的方案。后续如果发生重要变更，应同步更新这里。
+
+## 项目目标
+
+当前目标是为个人使用 AI 辅助开发搭建一个可维护的基础工程，覆盖网站、移动 App、后端 API、数据库、CI/CD 和单机 Docker 部署。
+
+项目不追求一开始就做成复杂平台，优先保证：
+
+- 代码边界清楚。
+- Web、App、API 可以独立开发和部署。
+- 共享业务规则和接口契约，避免重复实现。
+- GitHub 上可以自动检查、构建和发布镜像。
+- 将来接入域名和服务器时不推翻现有结构。
+
+## 总体架构
+
+采用 pnpm workspace 管理的 monorepo：
+
+```text
+apps/
+  web/
+  mobile/
+  api/
+packages/
+  domain/
+  schemas/
+  api-client/
+  config/
+infra/
+  compose/
+  caddy/
+```
+
+选择 monorepo 的原因：
+
+- 个人开发时上下文集中，AI 更容易理解整体代码。
+- Web、App、API 修改接口时可以在同一个提交里同步调整。
+- 共享类型、校验 schema 和业务规则更直接。
+- CI/CD 和工程配置可以统一维护。
+
+## 应用分层
+
+### apps/web
+
+网站使用 React、Vite 和 TypeScript。
+
+职责：
+
+- 页面展示。
+- 浏览器交互。
+- 调用 `packages/api-client` 访问后端。
+
+不放：
+
+- 数据库访问。
+- 后端业务流程。
+- 可复用的核心业务规则。
+
+### apps/mobile
+
+移动 App 使用 Expo、React Native 和 TypeScript。
+
+职责：
+
+- iOS/Android 端 UI。
+- 移动端交互。
+- 调用 `packages/api-client` 访问后端。
+
+移动 App 不进入 Docker Compose 部署链路，后续发布走 Expo/EAS、TestFlight 或应用商店。
+
+### apps/api
+
+后端使用 Fastify 和 TypeScript。
+
+职责：
+
+- 对外提供 HTTP API。
+- 连接 MySQL。
+- 执行业务用例。
+- 隔离数据库、外部服务和后端运行时细节。
+
+选择 Fastify 的原因：
+
+- 对个人项目足够轻量。
+- 启动快，结构清晰。
+- 不需要 NestJS 那种偏团队协作和大型模块体系的框架重量。
+
+## 共享包
+
+### packages/domain
+
+放共享业务规则和领域类型。
+
+适合放：
+
+- 权限判断。
+- 状态计算。
+- 可被 Web、App、API 共用的纯业务逻辑。
+
+不适合放：
+
+- UI 组件。
+- 数据库访问。
+- HTTP 请求。
+- 平台 API。
+
+### packages/schemas
+
+使用 Zod 管理共享数据校验 schema。
+
+适合放：
+
+- 请求参数 schema。
+- 响应数据 schema。
+- 表单校验 schema。
+
+这样 Web、App、API 可以共享同一套数据契约。
+
+### packages/api-client
+
+封装 Web 和 App 调用后端 API 的客户端。
+
+职责：
+
+- 统一 API 请求路径。
+- 解析和校验 API 响应。
+- 隔离 fetch 调用细节。
+
+### packages/config
+
+放共享工程配置，例如 TypeScript 基础配置。
+
+## 数据库与 ORM
+
+数据库选择 MySQL 8。
+
+ORM 选择 Prisma。
+
+选择 Prisma 的原因：
+
+- schema 文件直观，适合个人和 AI 协作阅读。
+- TypeScript 类型生成友好。
+- 数据库结构迁移更规范。
+- 早期能减少手写 SQL 的重复和字段错误。
+
+复杂统计或性能敏感查询后续可以补充原生 SQL，但默认业务读写优先走 Prisma。
+
+## 部署方案
+
+采用单机 Docker Compose，不使用 Kubernetes。
+
+生产部署目标：
+
+```text
+Caddy
+  -> web
+  -> api
+api
+  -> mysql
+```
+
+选择 Docker Compose 的原因：
+
+- 单机部署足够。
+- 运维成本低。
+- 服务关系清楚。
+- 未来换服务器也容易迁移。
+
+## 反向代理
+
+选择 Caddy。
+
+选择 Caddy 的原因：
+
+- 配置短。
+- 接入域名后自动 HTTPS。
+- 适合个人项目和单机部署。
+
+当前没有正式域名时，可以先用 IP 或 localhost。域名确定后再更新 Caddyfile 和服务器环境变量。
+
+## CI/CD 与镜像仓库
+
+CI/CD 使用 GitHub Actions。
+
+镜像仓库使用 GitHub Container Registry，也就是 `ghcr.io`。
+
+当前流水线分两类：
+
+- `ci.yml`：安装依赖、lint、typecheck、build。
+- `docker.yml`：构建 Web/API Docker 镜像并推送到 GHCR。
+
+服务器部署时使用 Docker Compose 拉取 GHCR 镜像并重启服务。
