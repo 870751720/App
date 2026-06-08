@@ -13,10 +13,18 @@
   "dependencies": {
     "@g18/api-client": "workspace:*",
     "@g18/domain": "workspace:*",
+    "@radix-ui/react-slot": "^1.2.5",
+    "@tailwindcss/vite": "^4.3.0",
     "@vitejs/plugin-react": "^5.1.1",
-    "vite": "^7.2.6",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^1.17.0",
+    "motion": "^12.40.0",
     "react": "^19.2.1",
-    "react-dom": "^19.2.1"
+    "react-dom": "^19.2.1",
+    "tailwind-merge": "^3.6.0",
+    "tailwindcss": "^4.3.0",
+    "vite": "^7.2.6"
   },
   "devDependencies": {
     "@types/react": "^19.2.7",

@@ -44,19 +44,36 @@ infra/
 
 ### apps/web
 
-网站使用 React、Vite 和 TypeScript。
+网站使用 React、Vite、TypeScript、Tailwind CSS、shadcn/ui、Radix UI、Motion for React 和 lucide-react。
 
 职责：
 
 - 页面展示。
 - 浏览器交互。
 - 调用 `packages/api-client` 访问后端。
+- 按 mobile-first 响应式方式支持手机、平板和桌面浏览器。
 
 不放：
 
 - 数据库访问。
 - 后端业务流程。
 - 可复用的核心业务规则。
+
+样式和组件决策：
+
+- Tailwind CSS 作为 Web 主样式方案。
+- shadcn/ui 作为 Web 组件组织方式，组件源码归项目所有。
+- Radix UI 作为可访问交互组件的底层基础。
+- Motion for React 作为 Web 动效方案。
+- lucide-react 作为 Web 图标方案。
+
+响应式原则：
+
+- 默认先实现手机布局，再通过断点增强到平板和桌面。
+- 按钮、表单、导航和弹层必须支持触屏操作。
+- 避免只依赖 hover 的交互。
+- 重要页面需要在手机宽度下验证文字不溢出、内容不重叠。
+- Web UI 和移动 App UI 不强行共用；共享范围限于业务类型、schema、业务规则和 API client。
 
 ### apps/mobile
 

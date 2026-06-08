@@ -5,11 +5,12 @@
 ## 技术栈
 
 - Monorepo：pnpm workspace
-- 网站：React、Vite、TypeScript
+- 网站：React、Vite、TypeScript、Tailwind CSS、shadcn/ui、Motion for React
 - 移动 App：Expo、React Native、TypeScript
 - 后端 API：Fastify、TypeScript
 - 数据库：MySQL 8、Prisma
 - 数据校验：Zod
+- 图标：lucide-react
 - 部署：Docker Compose、Caddy
 - CI/CD：GitHub Actions、GitHub Container Registry
 
@@ -53,3 +54,7 @@ pnpm --filter @g18/mobile dev
 
 - 网站：http://localhost:5173
 - API 健康检查：http://localhost:3001/health
+
+## 前端原则
+
+Web 页面按 mobile-first 响应式设计实现，必须兼容手机浏览器。移动 App 使用 React Native 自己的 UI 和样式体系，不与 Web 强行共用界面组件。
