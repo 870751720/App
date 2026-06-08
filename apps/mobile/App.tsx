@@ -9,7 +9,6 @@ import {
 } from "react-native";
 import { createApiClient } from "@app/api-client";
 import {
-  contactPreference,
   getPublicAppStatus,
   profileContent,
   type ProfileContent

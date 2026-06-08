@@ -15,7 +15,6 @@ import {
 import { motion } from "motion/react";
 import { createApiClient } from "@app/api-client";
 import {
-  contactPreference,
   getPublicAppStatus,
   profileContent,
   type ProfileContent
