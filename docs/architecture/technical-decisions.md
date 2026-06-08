@@ -192,3 +192,29 @@ CI/CD 使用 GitHub Actions。
 - `docker.yml`：构建 Web/API Docker 镜像并推送到 GHCR。
 
 服务器部署时使用 Docker Compose 拉取 GHCR 镜像并重启服务。
+
+## 配置与密钥管理
+
+项目统一使用 GitHub Actions 的 Secrets 和 Variables 管理 CI/CD 配置，类似 GitLab 的 CI/CD Variables。
+
+敏感信息放 GitHub Actions Secrets，例如：
+
+- `DATABASE_URL`
+- `MYSQL_PASSWORD`
+- `MYSQL_ROOT_PASSWORD`
+- `JWT_SECRET`
+- `SERVER_HOST`
+- `SERVER_USER`
+- `SSH_PRIVATE_KEY`
+
+非敏感配置放 GitHub Actions Variables，例如：
+
+- `API_PORT`
+- `WEB_ORIGIN`
+- `DEPLOY_PATH`
+- `WEB_IMAGE`
+- `API_IMAGE`
+
+后续如果区分开发、测试和生产环境，使用 GitHub Environments 管理环境级 secrets 和 variables。生产环境可以开启部署审批，避免生产密钥在非生产流程中暴露。
+
+本地开发仍使用 `.env.example` 说明需要哪些配置，真实 `.env` 文件不提交到 Git。
