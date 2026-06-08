@@ -64,6 +64,7 @@ API 提供 `GET /profile` 返回同一份展示内容，并使用 `packages/sche
 ## 首版验收标准
 
 - `pnpm typecheck` 通过。
+- `pnpm lint` 通过。
 - `pnpm build` 通过。
 - Web 首屏不依赖 `localhost` API，生产默认通过 `/api` 同源访问。
 - `GET /api/profile` 和 `GET /profile` 返回个人站展示内容，Web/App 通过 `api-client` 调用并具备本地回退。
