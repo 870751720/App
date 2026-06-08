@@ -1,2 +1,2 @@
-export * from "./appStatus";
-export * from "./profile";
+export * from "./appStatus.js";
+export * from "./profile.js";
