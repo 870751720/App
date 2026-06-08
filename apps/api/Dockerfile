@@ -26,11 +26,13 @@ FROM base AS runtime
 ENV NODE_ENV="production"
 COPY --from=build /app/node_modules /app/node_modules
 COPY --from=build /app/package.json /app/package.json
+COPY --from=build /app/apps/api/node_modules /app/apps/api/node_modules
 COPY --from=build /app/apps/api/package.json /app/apps/api/package.json
 COPY --from=build /app/apps/api/dist /app/apps/api/dist
 COPY --from=build /app/apps/api/prisma /app/apps/api/prisma
 COPY --from=build /app/packages/domain/dist /app/packages/domain/dist
 COPY --from=build /app/packages/domain/package.json /app/packages/domain/package.json
+COPY --from=build /app/packages/schemas/node_modules /app/packages/schemas/node_modules
 COPY --from=build /app/packages/schemas/dist /app/packages/schemas/dist
 COPY --from=build /app/packages/schemas/package.json /app/packages/schemas/package.json
 WORKDIR /app/apps/api
