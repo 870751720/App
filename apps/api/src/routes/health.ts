@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
-import { getPublicAppStatus } from "@g18/domain";
-import { healthStatusSchema } from "@g18/schemas";
+import { getPublicAppStatus } from "@app/domain";
+import { healthStatusSchema } from "@app/schemas";
 
 export async function registerHealthRoutes(app: FastifyInstance) {
   app.get("/health", async () => {
@@ -8,7 +8,7 @@ export async function registerHealthRoutes(app: FastifyInstance) {
 
     return healthStatusSchema.parse({
       status: status === "ready" ? "ok" : "ok",
-      service: "g18-api",
+      service: "api",
       checkedAt: new Date().toISOString()
     });
   });

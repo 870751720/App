@@ -1,5 +1,5 @@
 {
-  "name": "@g18/web",
+  "name": "@app/web",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -11,8 +11,8 @@
     "typecheck": "tsc -b --noEmit"
   },
   "dependencies": {
-    "@g18/api-client": "workspace:*",
-    "@g18/domain": "workspace:*",
+    "@app/api-client": "workspace:*",
+    "@app/domain": "workspace:*",
     "@radix-ui/react-slot": "^1.2.5",
     "@tailwindcss/vite": "^4.3.0",
     "@vitejs/plugin-react": "^5.1.1",

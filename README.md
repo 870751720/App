@@ -1,4 +1,4 @@
-# G18 App
+# App
 
 这是一个用于网站、移动 App 和后端 API 的 React 技术栈项目骨架。
 
@@ -45,9 +45,9 @@ pnpm build
 单独启动应用：
 
 ```bash
-pnpm --filter @g18/web dev
-pnpm --filter @g18/api dev
-pnpm --filter @g18/mobile dev
+pnpm --filter @app/web dev
+pnpm --filter @app/api dev
+pnpm --filter @app/mobile dev
 ```
 
 本地默认地址：

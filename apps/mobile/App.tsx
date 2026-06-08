@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { SafeAreaView, StyleSheet, Text, View } from "react-native";
-import { createApiClient } from "@g18/api-client";
-import { getPublicAppStatus } from "@g18/domain";
+import { createApiClient } from "@app/api-client";
+import { getPublicAppStatus } from "@app/domain";
 
 type HealthView =
   | { state: "loading" }
@@ -42,7 +42,7 @@ export default function App() {
   return (
     <SafeAreaView style={styles.screen}>
       <View style={styles.content}>
-        <Text style={styles.eyebrow}>G18 App</Text>
+        <Text style={styles.eyebrow}>App</Text>
         <Text style={styles.title}>Mobile foundation</Text>
         <View style={styles.panel}>
           <Text style={styles.label}>Public status</Text>

@@ -1,5 +1,5 @@
 {
-  "name": "@g18/api",
+  "name": "@app/api",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -14,8 +14,8 @@
   },
   "dependencies": {
     "@fastify/cors": "^11.1.0",
-    "@g18/domain": "workspace:*",
-    "@g18/schemas": "workspace:*",
+    "@app/domain": "workspace:*",
+    "@app/schemas": "workspace:*",
     "@prisma/client": "^6.19.0",
     "fastify": "^5.6.2",
     "zod": "^4.1.12"

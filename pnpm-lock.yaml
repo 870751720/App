@@ -29,10 +29,10 @@ importers:
       '@fastify/cors':
         specifier: ^11.1.0
         version: 11.2.0
-      '@g18/domain':
+      '@app/domain':
         specifier: workspace:*
         version: link:../../packages/domain
-      '@g18/schemas':
+      '@app/schemas':
         specifier: workspace:*
         version: link:../../packages/schemas
       '@prisma/client':
@@ -57,10 +57,10 @@ importers:
 
   apps/mobile:
     dependencies:
-      '@g18/api-client':
+      '@app/api-client':
         specifier: workspace:*
         version: link:../../packages/api-client
-      '@g18/domain':
+      '@app/domain':
         specifier: workspace:*
         version: link:../../packages/domain
       expo:
@@ -82,10 +82,10 @@ importers:
 
   apps/web:
     dependencies:
-      '@g18/api-client':
+      '@app/api-client':
         specifier: workspace:*
         version: link:../../packages/api-client
-      '@g18/domain':
+      '@app/domain':
         specifier: workspace:*
         version: link:../../packages/domain
       '@radix-ui/react-slot':
@@ -137,7 +137,7 @@ importers:
 
   packages/api-client:
     dependencies:
-      '@g18/schemas':
+      '@app/schemas':
         specifier: workspace:*
         version: link:../schemas
       zod:

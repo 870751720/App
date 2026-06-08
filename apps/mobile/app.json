@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "G18 App",
-    "slug": "g18-app",
+    "name": "App",
+    "slug": "app",
     "version": "0.1.0",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",

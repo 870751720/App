@@ -1,5 +1,5 @@
 {
-  "name": "@g18/domain",
+  "name": "@app/domain",
   "version": "0.1.0",
   "private": true,
   "type": "module",

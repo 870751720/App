@@ -1,4 +1,4 @@
-import { healthStatusSchema, type HealthStatus } from "@g18/schemas";
+import { healthStatusSchema, type HealthStatus } from "@app/schemas";
 
 export interface ApiClientOptions {
   baseUrl: string;

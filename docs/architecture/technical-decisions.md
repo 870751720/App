@@ -206,13 +206,21 @@ CI/CD 使用 GitHub Actions。
 当前流水线分两类：
 
 - `ci.yml`：安装依赖、lint、typecheck、build。
-- `docker.yml`：构建 Web/API Docker 镜像并推送到 GHCR。
+- `docker.yml`：构建 Web/API Docker 镜像并推送到 GHCR，然后通过 SSH 自动部署到单机服务器。
 
-服务器部署时使用 Docker Compose 拉取 GHCR 镜像并重启服务。
+自动部署流程由 GitHub Actions 负责：
+
+- 在 GitHub Actions 中生成生产 `.env`。
+- 同步 `docker-compose.prod.yml` 和 `Caddyfile` 到服务器部署目录。
+- 在服务器上登录 GHCR、拉取当前提交的镜像并重启 Docker Compose 服务。
+
+服务器只保留运行时状态和 Docker volume，不手动维护生产 `.env`，也不手动执行 GHCR 登录。
 
 ## 配置与密钥管理
 
 项目统一使用 GitHub Actions 的 Secrets 和 Variables 管理 CI/CD 配置，类似 GitLab 的 CI/CD Variables。
+
+个人访问令牌（PAT）只用于临时本地操作，不写入仓库、不写入文档明文、不提交到服务器部署目录。仓库推送优先使用本机 SSH 凭据；如果必须临时使用 PAT，只应放在当前 shell 进程的环境变量中，用完立即在 GitHub 删除或轮换。
 
 敏感信息放 GitHub Actions Secrets，例如：
 
@@ -227,6 +235,11 @@ CI/CD 使用 GitHub Actions。
 非敏感配置放 GitHub Actions Variables，例如：
 
 - `API_PORT`
+- `COMPOSE_PROJECT_NAME`
+- `MYSQL_DATABASE`
+- `MYSQL_USER`
+- `SERVER_PORT`
+- `SITE_ADDRESS`
 - `WEB_ORIGIN`
 - `DEPLOY_PATH`
 - `WEB_IMAGE`

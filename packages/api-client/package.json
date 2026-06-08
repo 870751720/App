@@ -1,5 +1,5 @@
 {
-  "name": "@g18/api-client",
+  "name": "@app/api-client",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -17,7 +17,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@g18/schemas": "workspace:*",
+    "@app/schemas": "workspace:*",
     "zod": "^4.1.12"
   },
   "devDependencies": {

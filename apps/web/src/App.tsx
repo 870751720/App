@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Activity, ArrowRight, Smartphone } from "lucide-react";
 import { motion } from "motion/react";
-import { createApiClient } from "@g18/api-client";
-import { getPublicAppStatus } from "@g18/domain";
+import { createApiClient } from "@app/api-client";
+import { getPublicAppStatus } from "@app/domain";
 import { Button } from "./components/ui/button";
 
 type HealthView =
@@ -10,7 +10,7 @@ type HealthView =
   | { state: "ready"; checkedAt: string }
   | { state: "error"; message: string };
 
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3001";
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? "/api";
 
 export function App() {
   const [health, setHealth] = useState<HealthView>({ state: "loading" });
@@ -51,7 +51,7 @@ export function App() {
           className="min-w-0"
         >
           <p className="mb-3 text-sm font-bold uppercase text-teal-700">
-            G18 App
+            App
           </p>
           <h1 className="max-w-3xl text-4xl font-black leading-tight text-slate-950 sm:text-5xl lg:text-6xl">
             Web, app, and API foundation

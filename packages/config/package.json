@@ -1,5 +1,5 @@
 {
-  "name": "@g18/config",
+  "name": "@app/config",
   "version": "0.1.0",
   "private": true,
   "files": [

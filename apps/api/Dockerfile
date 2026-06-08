@@ -17,10 +17,10 @@ COPY apps/api apps/api
 COPY packages/config packages/config
 COPY packages/domain packages/domain
 COPY packages/schemas packages/schemas
-RUN pnpm --filter @g18/domain build
-RUN pnpm --filter @g18/schemas build
-RUN pnpm --filter @g18/api prisma:generate
-RUN pnpm --filter @g18/api build
+RUN pnpm --filter @app/domain build
+RUN pnpm --filter @app/schemas build
+RUN pnpm --filter @app/api prisma:generate
+RUN pnpm --filter @app/api build
 
 FROM base AS runtime
 ENV NODE_ENV="production"

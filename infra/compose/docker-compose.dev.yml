@@ -3,10 +3,10 @@ services:
     image: mysql:8.4
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-g18_root_password}
-      MYSQL_DATABASE: ${MYSQL_DATABASE:-g18_app}
-      MYSQL_USER: ${MYSQL_USER:-g18}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-g18_password}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-app_root_password}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-app}
+      MYSQL_USER: ${MYSQL_USER:-app}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-app_password}
     ports:
       - "3306:3306"
     volumes:
