@@ -2,47 +2,63 @@ import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import {
   Activity,
-  BookOpen,
   Boxes,
   CheckCircle2,
-  Cpu,
-  ExternalLink,
-  Radio,
-  Rocket,
-  Terminal,
-  Zap
+  ChevronRight,
+  CircleAlert,
+  Gauge,
+  LockKeyhole,
+  LogOut,
+  Server,
+  ShieldCheck,
+  UserRoundCog,
+  UsersRound
 } from "lucide-react";
-import { motion } from "motion/react";
 import { createApiClient } from "@app/api-client";
 import {
-  getPublicAppStatus,
-  profileContent,
-  type ProfileContent
+  canUseAction,
+  demoAccounts,
+  roleDescriptions,
+  roleLabels,
+  type UserRole
 } from "@app/domain";
-import heroImage from "./assets/geek-workstation-hero.png";
+import type { AuthSessionResponse, HealthStatus, OperationsOverviewResponse } from "@app/schemas";
 import { Button } from "./components/ui/button";
+
+type SessionState =
+  | { state: "anonymous" }
+  | { state: "loading"; token: string }
+  | { state: "authenticated"; session: AuthSessionResponse }
+  | { state: "error"; message: string };
 
 type HealthView =
   | { state: "loading" }
-  | { state: "ready"; checkedAt: string }
+  | { state: "ready"; data: HealthStatus }
+  | { state: "error"; message: string };
+
+type OverviewView =
+  | { state: "idle" }
+  | { state: "loading" }
+  | { state: "ready"; data: OperationsOverviewResponse }
   | { state: "error"; message: string };
 
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? "/api";
+const sessionStorageKey = "app.session.token";
 
 export function App() {
-  const [health, setHealth] = useState<HealthView>({ state: "loading" });
-  const [profile, setProfile] = useState<ProfileContent>(profileContent);
-  const publicStatus = getPublicAppStatus(false);
   const apiClient = useMemo(() => createApiClient({ baseUrl: apiBaseUrl }), []);
+  const [session, setSession] = useState<SessionState>({ state: "anonymous" });
+  const [health, setHealth] = useState<HealthView>({ state: "loading" });
+  const [overview, setOverview] = useState<OverviewView>({ state: "idle" });
 
   useEffect(() => {
     let isMounted = true;
 
     apiClient
       .getHealth()
-      .then((result) => {
+      .then((data) => {
         if (isMounted) {
-          setHealth({ state: "ready", checkedAt: result.checkedAt });
+          setHealth({ state: "ready", data });
         }
       })
       .catch((error: unknown) => {
@@ -54,16 +70,32 @@ export function App() {
         }
       });
 
+    return () => {
+      isMounted = false;
+    };
+  }, [apiClient]);
+
+  useEffect(() => {
+    const token = window.localStorage.getItem(sessionStorageKey);
+
+    if (!token) {
+      return;
+    }
+
+    let isMounted = true;
+    setSession({ state: "loading", token });
+
     apiClient
-      .getProfile()
-      .then((result) => {
+      .getCurrentUser(token)
+      .then((user) => {
         if (isMounted) {
-          setProfile(result);
+          setSession({ state: "authenticated", session: { token, user } });
         }
       })
       .catch(() => {
+        window.localStorage.removeItem(sessionStorageKey);
         if (isMounted) {
-          setProfile(profileContent);
+          setSession({ state: "anonymous" });
         }
       });
 
@@ -72,298 +104,411 @@ export function App() {
     };
   }, [apiClient]);
 
+  useEffect(() => {
+    if (session.state !== "authenticated") {
+      setOverview({ state: "idle" });
+      return;
+    }
+
+    let isMounted = true;
+    setOverview({ state: "loading" });
+
+    apiClient
+      .getOperationsOverview(session.session.token)
+      .then((data) => {
+        if (isMounted) {
+          setOverview({ state: "ready", data });
+        }
+      })
+      .catch((error: unknown) => {
+        if (isMounted) {
+          setOverview({
+            state: "error",
+            message: error instanceof Error ? error.message : "Unknown error"
+          });
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [apiClient, session]);
+
+  async function handleLogin(email: string, password: string) {
+    setSession({ state: "loading", token: "" });
+
+    try {
+      const nextSession = await apiClient.login(email, password);
+      window.localStorage.setItem(sessionStorageKey, nextSession.token);
+      setSession({ state: "authenticated", session: nextSession });
+    } catch (error) {
+      setSession({
+        state: "error",
+        message: error instanceof Error ? error.message : "登录失败"
+      });
+    }
+  }
+
+  function handleLogout() {
+    window.localStorage.removeItem(sessionStorageKey);
+    setSession({ state: "anonymous" });
+    setOverview({ state: "idle" });
+  }
+
   return (
-    <main className="min-h-screen bg-[#0c1117] text-slate-100">
-      <Hero health={health} profile={profile} publicStatus={publicStatus} />
-      <SignalBoard health={health} profile={profile} publicStatus={publicStatus} />
-      <StackSection profile={profile} />
-      <ProjectsSection profile={profile} />
-      <JournalSection profile={profile} />
-      <ContactSection profile={profile} />
+    <main className="min-h-screen bg-[#f4f6f8] text-[#17202a]">
+      <div className="mx-auto grid min-h-screen w-full max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
+        {session.state === "authenticated" ? (
+          <Dashboard
+            health={health}
+            overview={overview}
+            session={session.session}
+            onLogout={handleLogout}
+          />
+        ) : (
+          <LoginScreen health={health} session={session} onLogin={handleLogin} />
+        )}
+      </div>
     </main>
   );
 }
 
-function Hero({
+function LoginScreen({
   health,
-  profile,
-  publicStatus
+  session,
+  onLogin
 }: {
   health: HealthView;
-  profile: ProfileContent;
-  publicStatus: string;
+  session: SessionState;
+  onLogin: (email: string, password: string) => Promise<void>;
 }) {
-  return (
-    <section className="relative isolate min-h-[92vh] overflow-hidden border-b border-white/10">
-      <img
-        src={heroImage}
-        alt="Night workstation with code dashboards and server gear"
-        className="absolute inset-0 h-full w-full object-cover"
-      />
-      <div className="absolute inset-0 bg-[linear-gradient(90deg,#0c1117_0%,rgba(12,17,23,0.92)_34%,rgba(12,17,23,0.62)_68%,rgba(12,17,23,0.34)_100%)]" />
-      <div className="absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-[#0c1117] to-transparent" />
+  const [email, setEmail] = useState(demoAccounts[0]?.email ?? "");
+  const [password, setPassword] = useState(demoAccounts[0]?.password ?? "");
+  const isLoading = session.state === "loading";
 
-      <div className="relative mx-auto flex min-h-[92vh] w-full max-w-7xl flex-col justify-between px-4 py-5 sm:px-6 lg:px-8">
-        <nav className="flex items-center justify-between gap-4">
-          <a href="#top" className="flex items-center gap-2 text-sm font-bold">
-            <span className="grid size-9 place-items-center rounded-md bg-teal-400 text-slate-950">
-              <Terminal aria-hidden="true" className="size-5" />
-            </span>
-            <span>Builder OS</span>
-          </a>
-          <div className="hidden items-center gap-5 text-sm text-slate-300 sm:flex">
-            <a className="hover:text-white" href="#stack">
-              Stack
-            </a>
-            <a className="hover:text-white" href="#projects">
-              Projects
-            </a>
-            <a className="hover:text-white" href="#journal">
-              Journal
-            </a>
+  function selectRole(role: UserRole) {
+    const account = demoAccounts.find((candidate) => candidate.role === role);
+
+    if (account) {
+      setEmail(account.email);
+      setPassword(account.password);
+    }
+  }
+
+  return (
+    <section className="grid content-center gap-6 py-6 lg:grid-cols-2 lg:items-center">
+      <div className="max-w-3xl">
+        <div className="mb-6 inline-flex items-center gap-2 rounded-md border border-[#1f6feb]/20 bg-white px-3 py-2 text-sm font-bold text-[#1f6feb] shadow-sm">
+          <ShieldCheck aria-hidden="true" className="size-4" />
+          Personal Ops Console
+        </div>
+        <h1 className="max-w-2xl text-4xl font-black leading-tight tracking-normal text-[#101820] sm:text-5xl lg:text-6xl">
+          登录后管理你的服务器、部署和项目状态
+        </h1>
+        <p className="mt-5 max-w-2xl text-base leading-8 text-[#516071] sm:text-lg">
+          第一版先把 Owner、管理员、普通用户三层权限跑通。旧的个人介绍页面已被替换为管理系统入口，后续可以接真实用户表、审计日志和部署操作。
+        </p>
+        <div className="mt-8 grid gap-3 sm:grid-cols-3">
+          {(["owner", "admin", "user"] as const).map((role) => (
+            <button
+              key={role}
+              type="button"
+              onClick={() => selectRole(role)}
+              className="min-h-32 rounded-lg border border-[#d7dee8] bg-white p-4 text-left shadow-sm transition hover:border-[#1f6feb] hover:shadow-md"
+            >
+              <span className="flex size-10 items-center justify-center rounded-md bg-[#eef5ff] text-[#1f6feb]">
+                {role === "owner" ? (
+                  <UserRoundCog aria-hidden="true" className="size-5" />
+                ) : role === "admin" ? (
+                  <ShieldCheck aria-hidden="true" className="size-5" />
+                ) : (
+                  <UsersRound aria-hidden="true" className="size-5" />
+                )}
+              </span>
+              <span className="mt-4 block font-black text-[#101820]">{roleLabels[role]}</span>
+              <span className="mt-2 block text-sm leading-6 text-[#66758a]">{roleDescriptions[role]}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <form
+        className="w-full max-w-[440px] rounded-lg border border-[#d7dee8] bg-white p-5 shadow-xl shadow-[#223044]/10 lg:justify-self-end"
+        onSubmit={(event) => {
+          event.preventDefault();
+          void onLogin(email, password);
+        }}
+      >
+        <div className="flex items-center justify-between gap-4 border-b border-[#edf1f5] pb-5">
+          <div>
+            <h2 className="text-xl font-black text-[#101820]">登录</h2>
+            <p className="mt-1 text-sm text-[#66758a]">选择角色会自动填入演示账号。</p>
           </div>
+          <span className="grid size-11 place-items-center rounded-md bg-[#101820] text-white">
+            <LockKeyhole aria-hidden="true" className="size-5" />
+          </span>
+        </div>
+
+        <label className="mt-5 block">
+          <span className="text-sm font-bold text-[#344054]">邮箱</span>
+          <input
+            className="mt-2 h-12 w-full rounded-md border border-[#cfd8e3] px-3 text-base outline-none transition focus:border-[#1f6feb] focus:ring-4 focus:ring-[#1f6feb]/10"
+            value={email}
+            type="email"
+            autoComplete="username"
+            onChange={(event) => setEmail(event.target.value)}
+          />
+        </label>
+
+        <label className="mt-4 block">
+          <span className="text-sm font-bold text-[#344054]">密码</span>
+          <input
+            className="mt-2 h-12 w-full rounded-md border border-[#cfd8e3] px-3 text-base outline-none transition focus:border-[#1f6feb] focus:ring-4 focus:ring-[#1f6feb]/10"
+            value={password}
+            type="password"
+            autoComplete="current-password"
+            onChange={(event) => setPassword(event.target.value)}
+          />
+        </label>
+
+        {session.state === "error" ? (
+          <div className="mt-4 flex items-start gap-2 rounded-md border border-[#fda29b] bg-[#fff1f0] p-3 text-sm text-[#b42318]">
+            <CircleAlert aria-hidden="true" className="mt-0.5 size-4 flex-none" />
+            <span>{session.message}</span>
+          </div>
+        ) : null}
+
+        <Button className="mt-5 h-12 w-full" size="lg" type="submit" disabled={isLoading}>
+          <LockKeyhole aria-hidden="true" className="size-4" />
+          {isLoading ? "登录中" : "进入控制台"}
+        </Button>
+
+        <div className="mt-5 rounded-md bg-[#f7f9fb] p-3">
+          <StatusRow label="API Health" value={renderHealth(health)} tone={health.state === "error" ? "error" : "ready"} />
+        </div>
+      </form>
+    </section>
+  );
+}
+
+function Dashboard({
+  health,
+  overview,
+  session,
+  onLogout
+}: {
+  health: HealthView;
+  overview: OverviewView;
+  session: AuthSessionResponse;
+  onLogout: () => void;
+}) {
+  const user = session.user;
+
+  return (
+    <section className="grid gap-4 py-4 lg:grid-cols-[260px_minmax(0,1fr)]">
+      <aside className="rounded-lg border border-[#d7dee8] bg-[#101820] p-4 text-white lg:min-h-[calc(100vh-2rem)]">
+        <div className="flex items-center gap-3">
+          <span className="grid size-11 place-items-center rounded-md bg-[#1f6feb]">
+            <Gauge aria-hidden="true" className="size-5" />
+          </span>
+          <div className="min-w-0">
+            <p className="font-black">Ops Console</p>
+            <p className="truncate text-sm text-[#b8c3cf]">{user.email}</p>
+          </div>
+        </div>
+
+        <div className="mt-6 rounded-lg bg-white/8 p-4">
+          <p className="text-sm text-[#b8c3cf]">当前身份</p>
+          <p className="mt-2 text-2xl font-black">{roleLabels[user.role]}</p>
+          <p className="mt-2 text-sm leading-6 text-[#d7dee8]">{roleDescriptions[user.role]}</p>
+        </div>
+
+        <nav className="mt-6 grid gap-2 text-sm font-bold text-[#d7dee8]">
+          <a className="rounded-md bg-white/10 px-3 py-3 text-white" href="#overview">
+            状态总览
+          </a>
+          <a className="rounded-md px-3 py-3 hover:bg-white/10" href="#services">
+            服务
+          </a>
+          <a className="rounded-md px-3 py-3 hover:bg-white/10" href="#projects">
+            项目
+          </a>
+          <a className="rounded-md px-3 py-3 hover:bg-white/10" href="#actions">
+            权限动作
+          </a>
         </nav>
 
-        <div id="top" className="grid gap-8 pb-10 pt-16 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-end">
-          <motion.div
-            initial={{ y: 10 }}
-            animate={{ y: 0 }}
-            transition={{ duration: 0.45, ease: "easeOut" }}
-            className="max-w-[22rem] sm:max-w-3xl"
-          >
-            <p className="mb-4 inline-flex items-center gap-2 rounded-md border border-teal-300/30 bg-teal-300/10 px-3 py-2 text-sm font-semibold text-teal-200">
-              <Radio aria-hidden="true" className="size-4" />
-              {profile.hero.handle}
-            </p>
-            <h1 className="text-[2rem] font-black leading-tight text-white [word-break:break-all] sm:text-5xl lg:text-7xl">
-              {profile.hero.title}
-            </h1>
-            <p className="mt-6 max-w-2xl text-base leading-8 text-slate-300 [word-break:break-all] sm:text-lg">
-              {profile.hero.summary}
-            </p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Button asChild size="lg">
-                <a href="#projects">
-                  <Rocket aria-hidden="true" className="size-4" />
-                  {profile.hero.primaryAction}
-                </a>
-              </Button>
-              <Button asChild variant="secondary" size="lg">
-                <a href="#status">
-                  <Activity aria-hidden="true" className="size-4" />
-                  {profile.hero.secondaryAction}
-                </a>
-              </Button>
-            </div>
-          </motion.div>
+        <Button className="mt-6 w-full bg-white text-[#101820] hover:bg-[#edf1f5]" type="button" onClick={onLogout}>
+          <LogOut aria-hidden="true" className="size-4" />
+          退出登录
+        </Button>
+      </aside>
 
-          <motion.aside
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1, duration: 0.45, ease: "easeOut" }}
-            className="grid gap-3 rounded-lg border border-white/10 bg-slate-950/70 p-4 shadow-2xl shadow-black/30 backdrop-blur"
-            aria-label="Live system status"
-          >
-            <StatusLine label="Public status" value={publicStatus} tone="ready" />
-            <StatusLine
-              label="API health"
-              value={renderHealth(health)}
-              tone={health.state === "error" ? "error" : "ready"}
-            />
-            <StatusLine label="Deploy target" value="43.110.116.98" tone="neutral" />
-          </motion.aside>
-        </div>
+      <div className="grid content-start gap-4">
+        <header id="overview" className="rounded-lg border border-[#d7dee8] bg-white p-5 shadow-sm">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <p className="text-sm font-bold text-[#1f6feb]">你好，{user.name}</p>
+              <h1 className="mt-2 text-3xl font-black text-[#101820] sm:text-4xl">个人运维系统</h1>
+              <p className="mt-2 max-w-2xl leading-7 text-[#66758a]">
+                管理服务器运行状态、部署链路、项目阶段和按角色开放的操作入口。
+              </p>
+            </div>
+            <div className="grid gap-2 rounded-md bg-[#f7f9fb] p-3 sm:min-w-72">
+              <StatusRow label="API" value={renderHealth(health)} tone={health.state === "error" ? "error" : "ready"} />
+              <StatusRow label="Role" value={roleLabels[user.role]} tone="neutral" />
+            </div>
+          </div>
+        </header>
+
+        {overview.state === "ready" ? (
+          <>
+            <MetricGrid overview={overview.data} />
+            <ServicesSection overview={overview.data} />
+            <ProjectsSection overview={overview.data} />
+            <ActionsSection overview={overview.data} role={user.role} />
+          </>
+        ) : (
+          <LoadingOverview overview={overview} />
+        )}
       </div>
     </section>
   );
 }
 
-function SignalBoard({
-  health,
-  profile,
-  publicStatus
-}: {
-  health: HealthView;
-  profile: ProfileContent;
-  publicStatus: string;
-}) {
+function MetricGrid({ overview }: { overview: OperationsOverviewResponse }) {
   return (
-    <section id="status" className="mx-auto grid w-full max-w-7xl gap-4 px-4 py-10 sm:px-6 lg:grid-cols-4 lg:px-8">
-      <Panel className="lg:col-span-1">
-        <div className="flex items-center gap-3">
-          <CheckCircle2 aria-hidden="true" className="size-5 text-teal-300" />
-          <div>
-            <p className="text-sm text-slate-400">Runtime</p>
-            <p className="mt-1 font-semibold text-white">
-              {publicStatus} / {renderHealth(health)}
-            </p>
-          </div>
-        </div>
-      </Panel>
-      {profile.metrics.map((metric) => (
+    <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      {overview.metrics.map((metric) => (
         <Panel key={metric.label}>
-          <p className="text-sm text-slate-400">{metric.label}</p>
-          <p className="mt-2 text-xl font-black text-white">{metric.value}</p>
-          <p className="mt-2 text-sm leading-6 text-slate-300">{metric.detail}</p>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-sm font-bold text-[#66758a]">{metric.label}</p>
+              <p className="mt-2 text-2xl font-black text-[#101820]">{metric.value}</p>
+              <p className="mt-2 text-sm leading-6 text-[#66758a]">{metric.detail}</p>
+            </div>
+            <StateIcon state={metric.state} />
+          </div>
         </Panel>
       ))}
     </section>
   );
 }
 
-function StackSection({ profile }: { profile: ProfileContent }) {
+function ServicesSection({ overview }: { overview: OperationsOverviewResponse }) {
   return (
-    <section id="stack" className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-      <SectionHeader
-        icon={<Cpu aria-hidden="true" className="size-5" />}
-        title="技术栈"
-        summary="偏实战的全栈组合，优先服务快速验证、清晰边界和单机部署。"
-      />
-      <div className="mt-6 grid gap-4 md:grid-cols-2">
-        {profile.stackAreas.map((area) => (
-          <Panel key={area.title}>
+    <Section id="services" icon={<Server aria-hidden="true" className="size-5" />} title="服务状态">
+      <div className="grid gap-3 lg:grid-cols-2">
+        {overview.services.map((service) => (
+          <Panel key={service.name}>
             <div className="flex items-start justify-between gap-4">
-              <div>
-                <h3 className="text-xl font-black text-white">{area.title}</h3>
-                <p className="mt-2 leading-7 text-slate-300">{area.summary}</p>
+              <div className="min-w-0">
+                <h3 className="break-words text-xl font-black text-[#101820]">{service.name}</h3>
+                <p className="mt-2 text-sm font-bold text-[#1f6feb]">{service.target}</p>
+                <p className="mt-2 leading-7 text-[#66758a]">{service.detail}</p>
               </div>
-              <Boxes aria-hidden="true" className="size-5 flex-none text-amber-300" />
-            </div>
-            <div className="mt-5 flex flex-wrap gap-2">
-              {area.tools.map((tool) => (
-                <span key={tool} className="rounded-md bg-white/[0.08] px-3 py-1 text-sm text-slate-200">
-                  {tool}
-                </span>
-              ))}
+              <StateIcon state={service.state} />
             </div>
           </Panel>
         ))}
       </div>
-    </section>
+    </Section>
   );
 }
 
-function ProjectsSection({ profile }: { profile: ProfileContent }) {
+function ProjectsSection({ overview }: { overview: OperationsOverviewResponse }) {
   return (
-    <section id="projects" className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-      <SectionHeader
-        icon={<Rocket aria-hidden="true" className="size-5" />}
-        title="项目"
-        summary="首版先展示可继续迭代的项目方向，后续可以替换为真实仓库、截图和线上地址。"
-      />
-      <div className="mt-6 grid gap-4 lg:grid-cols-3">
-        {profile.projects.map((project) => (
-          <Panel key={project.name} className="flex min-h-64 flex-col justify-between">
-            <div>
-              <p className="text-sm font-semibold text-teal-200">{project.status}</p>
-              <h3 className="mt-3 text-2xl font-black text-white">{project.name}</h3>
-              <p className="mt-3 leading-7 text-slate-300">{project.summary}</p>
-            </div>
-            <div className="mt-6 flex flex-wrap gap-2">
-              {project.tags.map((tag) => (
-                <span key={tag} className="rounded-md border border-white/10 px-3 py-1 text-sm text-slate-300">
-                  {tag}
-                </span>
-              ))}
-            </div>
+    <Section id="projects" icon={<Boxes aria-hidden="true" className="size-5" />} title="项目">
+      <div className="grid gap-3 xl:grid-cols-3">
+        {overview.projects.map((project) => (
+          <Panel key={project.name}>
+            <p className="text-sm font-bold text-[#1f6feb]">{project.stage}</p>
+            <h3 className="mt-3 text-xl font-black text-[#101820]">{project.name}</h3>
+            <p className="mt-3 leading-7 text-[#66758a]">{project.summary}</p>
+            <p className="mt-4 inline-flex rounded-md bg-[#eef5ff] px-3 py-1 text-sm font-bold text-[#1f6feb]">
+              {roleLabels[project.ownerRole]}
+            </p>
           </Panel>
         ))}
       </div>
-    </section>
+    </Section>
   );
 }
 
-function JournalSection({ profile }: { profile: ProfileContent }) {
+function ActionsSection({ overview, role }: { overview: OperationsOverviewResponse; role: UserRole }) {
   return (
-    <section id="journal" className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-      <SectionHeader
-        icon={<BookOpen aria-hidden="true" className="size-5" />}
-        title="构建日志"
-        summary="把关键迭代记录下来，方便第二天继续接着做，而不是靠记忆恢复上下文。"
-      />
-      <div className="mt-6 grid gap-3">
-        {profile.journalEntries.map((entry) => (
-          <Panel key={`${entry.date}-${entry.title}`} className="grid gap-3 md:grid-cols-[150px_minmax(0,1fr)]">
-            <time className="text-sm font-semibold text-amber-200">{entry.date}</time>
-            <div>
-              <h3 className="font-bold text-white">{entry.title}</h3>
-              <p className="mt-2 leading-7 text-slate-300">{entry.summary}</p>
-            </div>
-          </Panel>
-        ))}
+    <Section id="actions" icon={<ShieldCheck aria-hidden="true" className="size-5" />} title="权限动作">
+      <div className="grid gap-3 lg:grid-cols-3">
+        {overview.actions.map((action) => {
+          const isAllowed = canUseAction(role, action.minimumRole);
+
+          return (
+            <button
+              key={action.label}
+              type="button"
+              disabled={!isAllowed}
+              className="min-h-44 rounded-lg border border-[#d7dee8] bg-white p-5 text-left shadow-sm transition enabled:hover:border-[#1f6feb] enabled:hover:shadow-md disabled:cursor-not-allowed disabled:opacity-55"
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-sm font-bold text-[#66758a]">需要 {roleLabels[action.minimumRole]}</p>
+                  <h3 className="mt-3 text-xl font-black text-[#101820]">{action.label}</h3>
+                </div>
+                <ChevronRight aria-hidden="true" className="size-5 text-[#1f6feb]" />
+              </div>
+              <p className="mt-4 leading-7 text-[#66758a]">{action.description}</p>
+              <p className="mt-4 text-sm font-black text-[#101820]">{isAllowed ? "可用" : "权限不足"}</p>
+            </button>
+          );
+        })}
       </div>
-    </section>
+    </Section>
   );
 }
 
-function ContactSection({ profile }: { profile: ProfileContent }) {
-  const contactPreference = profile.contactPreference;
-
+function LoadingOverview({ overview }: { overview: OverviewView }) {
   return (
-    <section className="mx-auto w-full max-w-7xl px-4 pb-16 pt-12 sm:px-6 lg:px-8">
-      <div className="grid gap-5 rounded-lg border border-teal-300/20 bg-teal-300/10 p-5 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
-        <div>
-          <p className="flex items-center gap-2 text-sm font-semibold text-teal-200">
-            <Zap aria-hidden="true" className="size-4" />
-            Contact
-          </p>
-          <h2 className="mt-3 text-2xl font-black text-white">{contactPreference.title}</h2>
-          <p className="mt-3 max-w-3xl leading-7 text-slate-300">{contactPreference.summary}</p>
-          <div className="mt-4 flex flex-wrap gap-2">
-            {contactPreference.channels.map((channel) => (
-              <span key={channel} className="rounded-md bg-slate-950/70 px-3 py-1 text-sm text-slate-200">
-                {channel}
-              </span>
-            ))}
-          </div>
-        </div>
-        <Button asChild size="lg">
-          <a href="https://github.com/870751720/App" target="_blank" rel="noreferrer">
-            <ExternalLink aria-hidden="true" className="size-4" />
-            GitHub
-          </a>
-        </Button>
+    <Panel>
+      <div className="flex min-h-48 flex-col items-center justify-center gap-3 text-center">
+        <Activity aria-hidden="true" className="size-7 animate-pulse text-[#1f6feb]" />
+        <p className="font-black text-[#101820]">
+          {overview.state === "error" ? "运维数据加载失败" : "正在加载运维数据"}
+        </p>
+        <p className="max-w-md text-sm leading-6 text-[#66758a]">
+          {overview.state === "error" ? overview.message : "正在从 API 获取登录后的控制台数据。"}
+        </p>
       </div>
-    </section>
+    </Panel>
   );
 }
 
-function SectionHeader({
+function Section({
+  id,
   icon,
   title,
-  summary
+  children
 }: {
+  id: string;
   icon: ReactNode;
   title: string;
-  summary: string;
-}) {
-  return (
-    <div className="max-w-3xl">
-      <p className="flex items-center gap-2 text-sm font-semibold text-teal-200">
-        {icon}
-        {title}
-      </p>
-      <h2 className="mt-3 text-3xl font-black text-white sm:text-4xl">{title}</h2>
-      <p className="mt-3 leading-7 text-slate-300">{summary}</p>
-    </div>
-  );
-}
-
-function Panel({
-  children,
-  className = ""
-}: {
   children: ReactNode;
-  className?: string;
 }) {
   return (
-    <div className={`rounded-lg border border-white/10 bg-white/[0.045] p-5 ${className}`}>
+    <section id={id} className="grid gap-3">
+      <div className="flex items-center gap-2 text-[#101820]">
+        <span className="grid size-9 place-items-center rounded-md bg-[#e8eef5]">{icon}</span>
+        <h2 className="text-xl font-black">{title}</h2>
+      </div>
       {children}
-    </div>
+    </section>
   );
 }
 
-function StatusLine({
+function Panel({ children }: { children: ReactNode }) {
+  return <div className="rounded-lg border border-[#d7dee8] bg-white p-5 shadow-sm">{children}</div>;
+}
+
+function StatusRow({
   label,
   value,
   tone
@@ -372,18 +517,29 @@ function StatusLine({
   value: string;
   tone: "ready" | "error" | "neutral";
 }) {
-  const toneClass =
-    tone === "ready" ? "bg-teal-300" : tone === "error" ? "bg-rose-400" : "bg-amber-300";
+  const toneClass = tone === "ready" ? "bg-[#12b76a]" : tone === "error" ? "bg-[#f04438]" : "bg-[#f79009]";
 
   return (
-    <div className="flex min-h-16 items-center justify-between gap-4 rounded-md border border-white/10 bg-white/[0.04] px-4">
-      <div className="min-w-0">
-        <p className="text-sm text-slate-400">{label}</p>
-        <p className="mt-1 break-words text-sm font-semibold text-white">{value}</p>
-      </div>
-      <span className={`size-2.5 flex-none rounded-full ${toneClass}`} />
+    <div className="flex min-h-10 items-center justify-between gap-4">
+      <span className="text-sm font-bold text-[#66758a]">{label}</span>
+      <span className="inline-flex min-w-0 items-center gap-2 text-right text-sm font-black text-[#101820]">
+        <span className={`size-2.5 flex-none rounded-full ${toneClass}`} />
+        <span className="break-words">{value}</span>
+      </span>
     </div>
   );
+}
+
+function StateIcon({ state }: { state: "healthy" | "warning" | "offline" }) {
+  if (state === "healthy") {
+    return <CheckCircle2 aria-hidden="true" className="size-5 flex-none text-[#12b76a]" />;
+  }
+
+  if (state === "warning") {
+    return <CircleAlert aria-hidden="true" className="size-5 flex-none text-[#f79009]" />;
+  }
+
+  return <CircleAlert aria-hidden="true" className="size-5 flex-none text-[#f04438]" />;
 }
 
 function renderHealth(health: HealthView) {
@@ -395,5 +551,5 @@ function renderHealth(health: HealthView) {
     return health.message;
   }
 
-  return `ok ${new Date(health.checkedAt).toLocaleTimeString()}`;
+  return `ok ${new Date(health.data.checkedAt).toLocaleTimeString()}`;
 }

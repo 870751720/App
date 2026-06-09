@@ -4,8 +4,8 @@
 
 - Web：http://43.110.116.98
 - API 健康检查：http://43.110.116.98/health
-- 个人站内容接口：http://43.110.116.98/api/profile
-- 兼容直连内容接口：http://43.110.116.98/profile
+- 登录接口：http://43.110.116.98/api/auth/login
+- 运维概览接口：http://43.110.116.98/api/operations/overview
 
 服务器 SSH：
 
@@ -135,7 +135,6 @@ ssh root@43.110.116.98 "cd /root/app/infra/compose && docker compose -f docker-c
 
 ```powershell
 Invoke-WebRequest -UseBasicParsing http://43.110.116.98/health
-Invoke-WebRequest -UseBasicParsing http://43.110.116.98/api/profile
-Invoke-WebRequest -UseBasicParsing http://43.110.116.98/profile
+Invoke-WebRequest -UseBasicParsing -Method Post -ContentType 'application/json' -Body '{"email":"owner@app.local","password":"owner123"}' http://43.110.116.98/api/auth/login
 ssh root@43.110.116.98 "cd /root/app/infra/compose && docker compose -f docker-compose.prod.yml ps"
 ```

@@ -13,6 +13,7 @@
   "dependencies": {
     "@app/api-client": "workspace:*",
     "@app/domain": "workspace:*",
+    "@app/schemas": "workspace:*",
     "@radix-ui/react-slot": "^1.2.5",
     "@tailwindcss/vite": "^4.3.0",
     "@vitejs/plugin-react": "^5.1.1",

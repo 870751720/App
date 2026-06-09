@@ -1,3 +1,13 @@
+# 当前演示账号
+
+第一版登录系统使用本地演示账号跑通 Owner、管理员、普通用户三层角色，后续再接入数据库用户表和正式密码策略。
+
+```text
+Owner: owner@app.local / owner123
+管理员: admin@app.local / admin123
+普通用户: user@app.local / user123
+```
+
 # App
 
 这是一个用于网站、移动 App 和后端 API 的 React 技术栈项目骨架。
