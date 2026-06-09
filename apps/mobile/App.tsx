@@ -189,7 +189,7 @@ function Dashboard({
     <ScrollView contentContainerStyle={styles.content}>
       <View style={styles.hero}>
         <Text style={styles.eyebrow}>{roleLabels[user.role]}</Text>
-        <Text style={styles.title}>个人运维系统</Text>
+        <Text style={styles.title}>运维控制台</Text>
         <Text style={styles.summary}>{roleDescriptions[user.role]}</Text>
       </View>
 
@@ -200,6 +200,22 @@ function Dashboard({
 
       {overview.state === "ready" ? (
         <>
+          <Section title="环境">
+            <Card>
+              <Text style={styles.cardTitle}>{overview.data.environment.name}</Text>
+              <Text style={styles.cardLabel}>{overview.data.environment.serverHost}</Text>
+              <Text style={styles.cardText}>{overview.data.environment.deployMode}</Text>
+            </Card>
+          </Section>
+
+          <Section title="发布">
+            <Card>
+              <Text style={styles.cardTitle}>{overview.data.release.version}</Text>
+              <Text style={styles.cardLabel}>{overview.data.release.source}</Text>
+              <Text style={styles.cardText}>{overview.data.release.imageTag}</Text>
+            </Card>
+          </Section>
+
           <Section title="服务">
             {overview.data.services.map((service) => (
               <Card key={service.name}>
@@ -208,6 +224,22 @@ function Dashboard({
                 <Text style={styles.cardText}>{service.detail}</Text>
               </Card>
             ))}
+          </Section>
+
+          <Section title="事件">
+            {overview.data.incidents.length === 0 ? (
+              <Card>
+                <Text style={styles.cardTitle}>暂无待处理事件</Text>
+              </Card>
+            ) : (
+              overview.data.incidents.map((incident) => (
+                <Card key={incident.title}>
+                  <Text style={styles.cardTitle}>{incident.title}</Text>
+                  <Text style={styles.cardLabel}>{incident.status}</Text>
+                  <Text style={styles.cardText}>{incident.summary}</Text>
+                </Card>
+              ))
+            )}
           </Section>
 
           <Section title="权限动作">

@@ -2,11 +2,14 @@ import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import {
   Activity,
-  Boxes,
+  AlertTriangle,
   CheckCircle2,
   ChevronRight,
   CircleAlert,
+  Clock3,
   Gauge,
+  GitBranch,
+  Globe2,
   LockKeyhole,
   LogOut,
   Server,
@@ -300,11 +303,14 @@ function Dashboard({
           <a className="rounded-md bg-white/10 px-3 py-3 text-white" href="#overview">
             状态总览
           </a>
+          <a className="rounded-md px-3 py-3 hover:bg-white/10" href="#release">
+            发布
+          </a>
           <a className="rounded-md px-3 py-3 hover:bg-white/10" href="#services">
             服务
           </a>
-          <a className="rounded-md px-3 py-3 hover:bg-white/10" href="#projects">
-            项目
+          <a className="rounded-md px-3 py-3 hover:bg-white/10" href="#incidents">
+            事件
           </a>
           <a className="rounded-md px-3 py-3 hover:bg-white/10" href="#actions">
             权限动作
@@ -322,9 +328,9 @@ function Dashboard({
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               <p className="text-sm font-bold text-[#1f6feb]">你好，{user.name}</p>
-              <h1 className="mt-2 text-3xl font-black text-[#101820] sm:text-4xl">个人运维系统</h1>
+              <h1 className="mt-2 text-3xl font-black text-[#101820] sm:text-4xl">运维控制台</h1>
               <p className="mt-2 max-w-2xl leading-7 text-[#66758a]">
-                管理服务器运行状态、部署链路、项目阶段和按角色开放的操作入口。
+                查看环境、发布、服务健康和待处理事件。
               </p>
             </div>
             <div className="grid gap-2 rounded-md bg-[#f7f9fb] p-3 sm:min-w-72">
@@ -337,14 +343,57 @@ function Dashboard({
         {overview.state === "ready" ? (
           <>
             <MetricGrid overview={overview.data} />
+            <EnvironmentReleaseSection overview={overview.data} />
             <ServicesSection overview={overview.data} />
-            <ProjectsSection overview={overview.data} />
+            <IncidentsSection overview={overview.data} />
             <ActionsSection overview={overview.data} role={user.role} />
           </>
         ) : (
           <LoadingOverview overview={overview} />
         )}
       </div>
+    </section>
+  );
+}
+
+function EnvironmentReleaseSection({ overview }: { overview: OperationsOverviewResponse }) {
+  const releaseDate = new Date(overview.release.deployedAt).toLocaleString();
+
+  return (
+    <section id="release" className="grid gap-3 xl:grid-cols-2">
+      <Panel>
+        <div className="flex items-start gap-3">
+          <span className="grid size-10 flex-none place-items-center rounded-md bg-[#eef5ff] text-[#1f6feb]">
+            <Globe2 aria-hidden="true" className="size-5" />
+          </span>
+          <div className="min-w-0">
+            <p className="text-sm font-bold text-[#66758a]">环境</p>
+            <h2 className="mt-2 text-2xl font-black text-[#101820]">{overview.environment.name}</h2>
+            <div className="mt-4 grid gap-2 text-sm leading-6 text-[#66758a]">
+              <InfoLine label="入口" value={overview.environment.publicUrl} />
+              <InfoLine label="服务器" value={overview.environment.serverHost} />
+              <InfoLine label="部署" value={overview.environment.deployMode} />
+            </div>
+          </div>
+        </div>
+      </Panel>
+
+      <Panel>
+        <div className="flex items-start gap-3">
+          <span className="grid size-10 flex-none place-items-center rounded-md bg-[#eef5ff] text-[#1f6feb]">
+            <GitBranch aria-hidden="true" className="size-5" />
+          </span>
+          <div className="min-w-0">
+            <p className="text-sm font-bold text-[#66758a]">发布</p>
+            <h2 className="mt-2 break-words text-2xl font-black text-[#101820]">{overview.release.version}</h2>
+            <div className="mt-4 grid gap-2 text-sm leading-6 text-[#66758a]">
+              <InfoLine label="来源" value={overview.release.source} />
+              <InfoLine label="镜像" value={overview.release.imageTag} />
+              <InfoLine label="时间" value={releaseDate} />
+            </div>
+          </div>
+        </div>
+      </Panel>
     </section>
   );
 }
@@ -389,21 +438,38 @@ function ServicesSection({ overview }: { overview: OperationsOverviewResponse })
   );
 }
 
-function ProjectsSection({ overview }: { overview: OperationsOverviewResponse }) {
+function IncidentsSection({ overview }: { overview: OperationsOverviewResponse }) {
+  const incidents = overview.incidents;
+
   return (
-    <Section id="projects" icon={<Boxes aria-hidden="true" className="size-5" />} title="项目">
-      <div className="grid gap-3 xl:grid-cols-3">
-        {overview.projects.map((project) => (
-          <Panel key={project.name}>
-            <p className="text-sm font-bold text-[#1f6feb]">{project.stage}</p>
-            <h3 className="mt-3 text-xl font-black text-[#101820]">{project.name}</h3>
-            <p className="mt-3 leading-7 text-[#66758a]">{project.summary}</p>
-            <p className="mt-4 inline-flex rounded-md bg-[#eef5ff] px-3 py-1 text-sm font-bold text-[#1f6feb]">
-              {roleLabels[project.ownerRole]}
-            </p>
-          </Panel>
-        ))}
-      </div>
+    <Section id="incidents" icon={<AlertTriangle aria-hidden="true" className="size-5" />} title="事件与待处理">
+      {incidents.length === 0 ? (
+        <Panel>
+          <div className="flex items-center gap-3">
+            <CheckCircle2 aria-hidden="true" className="size-5 text-[#12b76a]" />
+            <p className="font-black text-[#101820]">暂无待处理事件</p>
+          </div>
+        </Panel>
+      ) : (
+        <div className="grid gap-3 lg:grid-cols-2">
+          {incidents.map((incident) => (
+            <Panel key={incident.title}>
+              <div className="flex items-start justify-between gap-4">
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-[#66758a]">{incident.status}</p>
+                  <h3 className="mt-2 break-words text-xl font-black text-[#101820]">{incident.title}</h3>
+                  <p className="mt-3 leading-7 text-[#66758a]">{incident.summary}</p>
+                  <p className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-[#66758a]">
+                    <Clock3 aria-hidden="true" className="size-4" />
+                    {new Date(incident.updatedAt).toLocaleString()}
+                  </p>
+                </div>
+                <IncidentBadge severity={incident.severity} />
+              </div>
+            </Panel>
+          ))}
+        </div>
+      )}
     </Section>
   );
 }
@@ -481,6 +547,15 @@ function Panel({ children }: { children: ReactNode }) {
   return <div className="rounded-lg border border-[#d7dee8] bg-white p-5 shadow-sm">{children}</div>;
 }
 
+function InfoLine({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="grid gap-1 sm:grid-cols-[72px_minmax(0,1fr)]">
+      <span className="font-bold text-[#344054]">{label}</span>
+      <span className="min-w-0 break-words">{value}</span>
+    </div>
+  );
+}
+
 function StatusRow({
   label,
   value,
@@ -501,6 +576,19 @@ function StatusRow({
       </span>
     </div>
   );
+}
+
+function IncidentBadge({ severity }: { severity: "info" | "warning" | "critical" }) {
+  const className =
+    severity === "critical"
+      ? "bg-[#fff1f0] text-[#b42318]"
+      : severity === "warning"
+        ? "bg-[#fff7ed] text-[#b54708]"
+        : "bg-[#eef5ff] text-[#1f6feb]";
+
+  const label = severity === "critical" ? "严重" : severity === "warning" ? "警告" : "信息";
+
+  return <span className={`rounded-md px-3 py-1 text-sm font-black ${className}`}>{label}</span>;
 }
 
 function StateIcon({ state }: { state: "healthy" | "warning" | "offline" }) {

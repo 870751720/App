@@ -29,11 +29,38 @@ export interface OperationAction {
   minimumRole: UserRole;
 }
 
+export interface RuntimeEnvironment {
+  name: string;
+  publicUrl: string;
+  serverHost: string;
+  deployMode: string;
+}
+
+export interface ReleaseSnapshot {
+  version: string;
+  source: string;
+  imageTag: string;
+  deployedAt: string;
+}
+
+export type IncidentSeverity = "info" | "warning" | "critical";
+
+export interface OperationsIncident {
+  title: string;
+  severity: IncidentSeverity;
+  status: string;
+  updatedAt: string;
+  summary: string;
+}
+
 export interface OperationsOverview {
   generatedAt: string;
+  environment: RuntimeEnvironment;
+  release: ReleaseSnapshot;
   metrics: OperationMetric[];
   services: ManagedService[];
   projects: ProjectEntry[];
+  incidents: OperationsIncident[];
   actions: OperationAction[];
 }
 
@@ -50,6 +77,18 @@ export function canUseAction(role: UserRole, minimumRole: UserRole) {
 export function getOperationsOverview(checkedAt = new Date()): OperationsOverview {
   return {
     generatedAt: checkedAt.toISOString(),
+    environment: {
+      name: "Production",
+      publicUrl: "http://43.110.116.98",
+      serverHost: "43.110.116.98",
+      deployMode: "Single-node Docker Compose"
+    },
+    release: {
+      version: "current",
+      source: "GitHub Actions / GHCR",
+      imageTag: "commit image tag",
+      deployedAt: checkedAt.toISOString()
+    },
     metrics: [
       {
         label: "API",
@@ -105,7 +144,7 @@ export function getOperationsOverview(checkedAt = new Date()): OperationsOvervie
     projects: [
       {
         name: "个人运维系统",
-        stage: "第一版",
+        stage: "MVP 验证",
         summary: "先完成登录、角色和状态面板，再接真实数据库与部署记录。",
         ownerRole: "owner"
       },
@@ -120,6 +159,22 @@ export function getOperationsOverview(checkedAt = new Date()): OperationsOvervie
         stage: "雏形",
         summary: "手机端保留健康检查和角色视图，后续可做推送提醒。",
         ownerRole: "user"
+      }
+    ],
+    incidents: [
+      {
+        title: "真实监控数据未接入",
+        severity: "warning",
+        status: "待处理",
+        updatedAt: checkedAt.toISOString(),
+        summary: "当前状态来自应用内静态概览，下一步需要接入 Docker、GitHub Actions 和服务器探针。"
+      },
+      {
+        title: "正式认证能力未完成",
+        severity: "warning",
+        status: "待处理",
+        updatedAt: checkedAt.toISOString(),
+        summary: "当前登录用于验证角色流，后续需要密码哈希、JWT 签名、过期和撤销机制。"
       }
     ],
     actions: [
