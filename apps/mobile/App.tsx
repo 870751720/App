@@ -12,10 +12,8 @@ import {
 import { createApiClient } from "@app/api-client";
 import {
   canUseAction,
-  demoAccounts,
   roleDescriptions,
-  roleLabels,
-  type UserRole
+  roleLabels
 } from "@app/domain";
 import type { AuthSessionResponse, HealthStatus, OperationsOverviewResponse } from "@app/schemas";
 
@@ -137,33 +135,15 @@ function LoginScreen({
   session: SessionState;
   onLogin: (email: string, password: string) => Promise<void>;
 }) {
-  const [email, setEmail] = useState(demoAccounts[0]?.email ?? "");
-  const [password, setPassword] = useState(demoAccounts[0]?.password ?? "");
-
-  function selectRole(role: UserRole) {
-    const account = demoAccounts.find((candidate) => candidate.role === role);
-
-    if (account) {
-      setEmail(account.email);
-      setPassword(account.password);
-    }
-  }
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   return (
     <ScrollView contentContainerStyle={styles.content}>
       <View style={styles.hero}>
         <Text style={styles.eyebrow}>Personal Ops Console</Text>
-        <Text style={styles.title}>登录后查看个人运维系统</Text>
-        <Text style={styles.summary}>Owner、管理员、普通用户三层权限已在第一版跑通。</Text>
-      </View>
-
-      <View style={styles.roleGrid}>
-        {(["owner", "admin", "user"] as const).map((role) => (
-          <Pressable key={role} style={styles.roleButton} onPress={() => selectRole(role)}>
-            <Text style={styles.roleTitle}>{roleLabels[role]}</Text>
-            <Text style={styles.roleText}>{roleDescriptions[role]}</Text>
-          </Pressable>
-        ))}
+        <Text style={styles.title}>访问控制台</Text>
+        <Text style={styles.summary}>使用授权账号登录，进入受保护的运维工作区。</Text>
       </View>
 
       <View style={styles.panel}>

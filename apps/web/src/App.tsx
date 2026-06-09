@@ -10,14 +10,11 @@ import {
   LockKeyhole,
   LogOut,
   Server,
-  ShieldCheck,
-  UserRoundCog,
-  UsersRound
+  ShieldCheck
 } from "lucide-react";
 import { createApiClient } from "@app/api-client";
 import {
   canUseAction,
-  demoAccounts,
   roleDescriptions,
   roleLabels,
   type UserRole
@@ -182,18 +179,9 @@ function LoginScreen({
   session: SessionState;
   onLogin: (email: string, password: string) => Promise<void>;
 }) {
-  const [email, setEmail] = useState(demoAccounts[0]?.email ?? "");
-  const [password, setPassword] = useState(demoAccounts[0]?.password ?? "");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const isLoading = session.state === "loading";
-
-  function selectRole(role: UserRole) {
-    const account = demoAccounts.find((candidate) => candidate.role === role);
-
-    if (account) {
-      setEmail(account.email);
-      setPassword(account.password);
-    }
-  }
 
   return (
     <section className="grid content-center gap-6 py-6 lg:grid-cols-2 lg:items-center">
@@ -203,32 +191,17 @@ function LoginScreen({
           Personal Ops Console
         </div>
         <h1 className="max-w-2xl text-4xl font-black leading-tight tracking-normal text-[#101820] sm:text-5xl lg:text-6xl">
-          登录后管理你的服务器、部署和项目状态
+          访问控制台
         </h1>
         <p className="mt-5 max-w-2xl text-base leading-8 text-[#516071] sm:text-lg">
-          第一版先把 Owner、管理员、普通用户三层权限跑通。旧的个人介绍页面已被替换为管理系统入口，后续可以接真实用户表、审计日志和部署操作。
+          使用授权账号登录，进入受保护的运维工作区。
         </p>
-        <div className="mt-8 grid gap-3 sm:grid-cols-3">
-          {(["owner", "admin", "user"] as const).map((role) => (
-            <button
-              key={role}
-              type="button"
-              onClick={() => selectRole(role)}
-              className="min-h-32 rounded-lg border border-[#d7dee8] bg-white p-4 text-left shadow-sm transition hover:border-[#1f6feb] hover:shadow-md"
-            >
-              <span className="flex size-10 items-center justify-center rounded-md bg-[#eef5ff] text-[#1f6feb]">
-                {role === "owner" ? (
-                  <UserRoundCog aria-hidden="true" className="size-5" />
-                ) : role === "admin" ? (
-                  <ShieldCheck aria-hidden="true" className="size-5" />
-                ) : (
-                  <UsersRound aria-hidden="true" className="size-5" />
-                )}
-              </span>
-              <span className="mt-4 block font-black text-[#101820]">{roleLabels[role]}</span>
-              <span className="mt-2 block text-sm leading-6 text-[#66758a]">{roleDescriptions[role]}</span>
-            </button>
-          ))}
+        <div className="mt-8 grid max-w-xl gap-3">
+          <div className="rounded-lg border border-[#d7dee8] bg-white p-4 shadow-sm">
+            <p className="text-sm font-bold text-[#66758a]">Access</p>
+            <p className="mt-2 text-xl font-black text-[#101820]">Owner / Admin / User</p>
+            <p className="mt-2 text-sm leading-6 text-[#66758a]">权限由后端会话解析，登录后按角色显示可用操作。</p>
+          </div>
         </div>
       </div>
 
@@ -242,7 +215,7 @@ function LoginScreen({
         <div className="flex items-center justify-between gap-4 border-b border-[#edf1f5] pb-5">
           <div>
             <h2 className="text-xl font-black text-[#101820]">登录</h2>
-            <p className="mt-1 text-sm text-[#66758a]">选择角色会自动填入演示账号。</p>
+            <p className="mt-1 text-sm text-[#66758a]">输入账号凭据继续。</p>
           </div>
           <span className="grid size-11 place-items-center rounded-md bg-[#101820] text-white">
             <LockKeyhole aria-hidden="true" className="size-5" />
@@ -520,9 +493,9 @@ function StatusRow({
   const toneClass = tone === "ready" ? "bg-[#12b76a]" : tone === "error" ? "bg-[#f04438]" : "bg-[#f79009]";
 
   return (
-    <div className="flex min-h-10 items-center justify-between gap-4">
+    <div className="flex min-h-10 flex-col items-start gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
       <span className="text-sm font-bold text-[#66758a]">{label}</span>
-      <span className="inline-flex min-w-0 items-center gap-2 text-right text-sm font-black text-[#101820]">
+      <span className="inline-flex min-w-0 items-center gap-2 text-left text-sm font-black text-[#101820] sm:text-right">
         <span className={`size-2.5 flex-none rounded-full ${toneClass}`} />
         <span className="break-words">{value}</span>
       </span>
