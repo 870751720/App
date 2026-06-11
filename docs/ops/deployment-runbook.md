@@ -31,7 +31,7 @@ ssh root@43.110.116.98
 
 生产 Compose 会启动 `mysql:8.4`。API 启动前会先运行一次性 `api-migrate` 服务执行 `prisma migrate deploy`，迁移成功后 API 才会进入运行状态。
 
-当前 CI 和镜像发布已经跑通。自动 deploy job 由仓库变量 `DEPLOY_ENABLED` 控制，只有设置为 `true` 时才会执行；未配置生产密钥前保持关闭，避免镜像发布成功后因为缺少部署密钥导致整个 workflow 标红。
+当前 CI 和镜像发布已经跑通。自动 deploy job 默认在 `main` 分支执行；需要临时关闭自动部署时，将仓库变量 `DEPLOY_ENABLED` 设为 `false`。
 
 ## GitHub Secrets
 
@@ -86,7 +86,7 @@ API_PORT=3001
 AI_DIAGNOSIS_ENDPOINT=
 AI_QUESTION_ENDPOINT=
 COMPOSE_PROJECT_NAME=app
-DEPLOY_ENABLED=true
+DEPLOY_ENABLED=
 DEPLOY_PATH=app
 MYSQL_DATABASE=app
 MYSQL_USER=app
@@ -104,7 +104,7 @@ WEB_ORIGIN=http://43.110.116.98
 Resource not accessible by personal access token
 ```
 
-需要在 GitHub PAT 权限中补齐当前仓库的 Actions Secrets/Variables 写权限，或手动在 GitHub 仓库 Settings 中填入上述 Secrets/Variables。配置完成前不要设置 `DEPLOY_ENABLED=true`；配置完成后再开启自动部署。
+需要在 GitHub PAT 权限中补齐当前仓库的 Actions Secrets/Variables 写权限，或手动在 GitHub 仓库 Settings 中填入上述 Secrets/Variables。需要暂停自动部署时设置 `DEPLOY_ENABLED=false`。
 
 ## 手动兜底部署
 
