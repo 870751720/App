@@ -1,6 +1,6 @@
-# 当前演示账号
+# 当前初始化账号
 
-第一版登录系统使用本地演示账号跑通 Owner、管理员、普通用户三层角色，后续再接入数据库用户表和正式密码策略。
+API 首次登录时会把以下账号初始化到 MySQL `users` 表，密码以 scrypt 哈希保存。会话 token 使用 `JWT_SECRET` 签名。
 
 ```text
 Owner: owner@app.local / owner123

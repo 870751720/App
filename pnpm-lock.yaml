@@ -157,6 +157,10 @@ importers:
   packages/config: {}
 
   packages/domain:
+    dependencies:
+      '@app/schemas':
+        specifier: workspace:*
+        version: link:../schemas
     devDependencies:
       typescript:
         specifier: ^5.9.3

@@ -29,6 +29,8 @@ ssh root@43.110.116.98
 - 通过 SSH 同步生产 `.env`、`docker-compose.prod.yml` 和 `Caddyfile`。
 - 在服务器执行 `docker compose pull` 和 `docker compose up -d`。
 
+生产 Compose 会启动 `mysql:8.4`。API 启动前会先运行一次性 `api-migrate` 服务执行 `prisma migrate deploy`，迁移成功后 API 才会进入运行状态。
+
 当前 CI 和镜像发布已经跑通。自动 deploy job 由仓库变量 `DEPLOY_ENABLED` 控制，只有设置为 `true` 时才会执行；未配置生产密钥前保持关闭，避免镜像发布成功后因为缺少部署密钥导致整个 workflow 标红。
 
 ## GitHub Secrets
@@ -39,8 +41,12 @@ ssh root@43.110.116.98
 - `SERVER_USER`
 - `SSH_PRIVATE_KEY`
 - `DATABASE_URL`
+- `AI_DIAGNOSIS_API_KEY`
+- `AI_QUESTION_API_KEY`
+- `JWT_SECRET`
 - `MYSQL_PASSWORD`
 - `MYSQL_ROOT_PASSWORD`
+- `OCR_API_KEY`
 
 本机已生成一份 ignored 记录，用于配置 GitHub Secrets 时读取：
 
@@ -60,11 +66,14 @@ C:\Users\Gavin\.ssh\id_rsa
 
 - `API_HOST`
 - `API_PORT`
+- `AI_DIAGNOSIS_ENDPOINT`
+- `AI_QUESTION_ENDPOINT`
 - `COMPOSE_PROJECT_NAME`
 - `DEPLOY_ENABLED`
 - `DEPLOY_PATH`
 - `MYSQL_DATABASE`
 - `MYSQL_USER`
+- `OCR_ENDPOINT`
 - `SERVER_PORT`
 - `SITE_ADDRESS`
 - `WEB_ORIGIN`
@@ -74,11 +83,14 @@ C:\Users\Gavin\.ssh\id_rsa
 ```text
 API_HOST=0.0.0.0
 API_PORT=3001
+AI_DIAGNOSIS_ENDPOINT=
+AI_QUESTION_ENDPOINT=
 COMPOSE_PROJECT_NAME=app
 DEPLOY_ENABLED=true
 DEPLOY_PATH=app
 MYSQL_DATABASE=app
 MYSQL_USER=app
+OCR_ENDPOINT=
 SERVER_PORT=22
 SITE_ADDRESS=:80
 WEB_ORIGIN=http://43.110.116.98
@@ -116,9 +128,16 @@ $envLines = @(
   "MYSQL_USER=$($values['MYSQL_USER'])",
   "MYSQL_PASSWORD=$($values['MYSQL_PASSWORD'])",
   "DATABASE_URL=$($values['DATABASE_URL'])",
+  "JWT_SECRET=$($values['JWT_SECRET'])",
   "WEB_ORIGIN=$($values['WEB_ORIGIN'])",
   "API_HOST=$($values['API_HOST'])",
   "API_PORT=$($values['API_PORT'])",
+  "AI_DIAGNOSIS_ENDPOINT=$($values['AI_DIAGNOSIS_ENDPOINT'])",
+  "AI_DIAGNOSIS_API_KEY=$($values['AI_DIAGNOSIS_API_KEY'])",
+  "AI_QUESTION_ENDPOINT=$($values['AI_QUESTION_ENDPOINT'])",
+  "AI_QUESTION_API_KEY=$($values['AI_QUESTION_API_KEY'])",
+  "OCR_ENDPOINT=$($values['OCR_ENDPOINT'])",
+  "OCR_API_KEY=$($values['OCR_API_KEY'])",
   "WEB_IMAGE=ghcr.io/870751720/app-web:$sha",
   "API_IMAGE=ghcr.io/870751720/app-api:$sha"
 )
@@ -128,7 +147,7 @@ $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
 scp D:\App\.secrets\compose-prod.env root@43.110.116.98:/root/app/infra/compose/.env
 scp D:\App\infra\compose\docker-compose.prod.yml root@43.110.116.98:/root/app/infra/compose/docker-compose.prod.yml
 scp D:\App\infra\caddy\Caddyfile root@43.110.116.98:/root/app/infra/caddy/Caddyfile
-ssh root@43.110.116.98 "cd /root/app/infra/compose && docker compose -f docker-compose.prod.yml pull api web && docker compose -f docker-compose.prod.yml up -d --remove-orphans"
+ssh root@43.110.116.98 "cd /root/app/infra/compose && docker compose -f docker-compose.prod.yml pull api api-migrate web mysql && docker compose -f docker-compose.prod.yml up -d --remove-orphans"
 ```
 
 ## 线上验证
@@ -138,3 +157,5 @@ Invoke-WebRequest -UseBasicParsing http://43.110.116.98/health
 Invoke-WebRequest -UseBasicParsing -Method Post -ContentType 'application/json' -Body '{"email":"owner@app.local","password":"owner123"}' http://43.110.116.98/api/auth/login
 ssh root@43.110.116.98 "cd /root/app/infra/compose && docker compose -f docker-compose.prod.yml ps"
 ```
+
+`/health` 返回中的 `checks.database` 应为 `ok`，表示 API 已能连接 MySQL。

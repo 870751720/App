@@ -81,16 +81,24 @@ jobs:
         env:
           API_HOST: ${{ vars.API_HOST || '0.0.0.0' }}
           API_PORT: ${{ vars.API_PORT || '3001' }}
+          AI_DIAGNOSIS_API_KEY: ${{ secrets.AI_DIAGNOSIS_API_KEY }}
+          AI_DIAGNOSIS_ENDPOINT: ${{ vars.AI_DIAGNOSIS_ENDPOINT }}
+          AI_QUESTION_API_KEY: ${{ secrets.AI_QUESTION_API_KEY }}
+          AI_QUESTION_ENDPOINT: ${{ vars.AI_QUESTION_ENDPOINT }}
           COMPOSE_PROJECT_NAME: ${{ vars.COMPOSE_PROJECT_NAME || 'app' }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
           MYSQL_DATABASE: ${{ vars.MYSQL_DATABASE || 'app' }}
           MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
           MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
           MYSQL_USER: ${{ vars.MYSQL_USER || 'app' }}
+          OCR_API_KEY: ${{ secrets.OCR_API_KEY }}
+          OCR_ENDPOINT: ${{ vars.OCR_ENDPOINT }}
           SITE_ADDRESS: ${{ vars.SITE_ADDRESS || ':80' }}
           WEB_ORIGIN: ${{ vars.WEB_ORIGIN || 'http://localhost' }}
         run: |
           test -n "$DATABASE_URL"
+          test -n "$JWT_SECRET"
           test -n "$MYSQL_PASSWORD"
           test -n "$MYSQL_ROOT_PASSWORD"
           {
@@ -101,9 +109,16 @@ jobs:
             printf 'MYSQL_USER=%s\n' "$MYSQL_USER"
             printf 'MYSQL_PASSWORD=%s\n' "$MYSQL_PASSWORD"
             printf 'DATABASE_URL=%s\n' "$DATABASE_URL"
+            printf 'JWT_SECRET=%s\n' "$JWT_SECRET"
             printf 'WEB_ORIGIN=%s\n' "$WEB_ORIGIN"
             printf 'API_HOST=%s\n' "$API_HOST"
             printf 'API_PORT=%s\n' "$API_PORT"
+            printf 'AI_DIAGNOSIS_ENDPOINT=%s\n' "$AI_DIAGNOSIS_ENDPOINT"
+            printf 'AI_DIAGNOSIS_API_KEY=%s\n' "$AI_DIAGNOSIS_API_KEY"
+            printf 'AI_QUESTION_ENDPOINT=%s\n' "$AI_QUESTION_ENDPOINT"
+            printf 'AI_QUESTION_API_KEY=%s\n' "$AI_QUESTION_API_KEY"
+            printf 'OCR_ENDPOINT=%s\n' "$OCR_ENDPOINT"
+            printf 'OCR_API_KEY=%s\n' "$OCR_API_KEY"
             printf 'WEB_IMAGE=%s\n' "$WEB_IMAGE"
             printf 'API_IMAGE=%s\n' "$API_IMAGE"
           } > .deploy.env

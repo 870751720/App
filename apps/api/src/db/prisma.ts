@@ -1,5 +1,11 @@
 import { PrismaClient } from "@prisma/client";
 
-export function createPrismaClient() {
-  return new PrismaClient();
+export function createPrismaClient(databaseUrl: string) {
+  return new PrismaClient({
+    datasources: {
+      db: {
+        url: databaseUrl
+      }
+    }
+  });
 }

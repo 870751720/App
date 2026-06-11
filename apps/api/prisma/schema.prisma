@@ -11,15 +11,227 @@ model User {
   id        Int      @id @default(autoincrement())
   email     String   @unique
   name      String
+  title     String   @default("学生")
+  passwordHash String @default("")
   role      UserRole @default(USER)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  mistakes Mistake[]
+  exams    ExamRecord[]
+  mastery  MasteryRecord[]
+  sources  QuestionSource[]
+  tasks    StudyTask[]
+  assets   QuestionAsset[]
+
   @@map("users")
+}
+
+model KnowledgePoint {
+  id         String       @id
+  subject    StudySubject
+  chapter    String
+  name       String
+  parentId   String?
+  examWeight Int
+  parent     KnowledgePoint?  @relation("KnowledgePointTree", fields: [parentId], references: [id])
+  children   KnowledgePoint[] @relation("KnowledgePointTree")
+  mastery    MasteryRecord[]
+  questions  QuestionKnowledgePoint[]
+  mistakes   MistakeKnowledgePoint[]
+
+  @@map("knowledge_points")
+}
+
+model MasteryRecord {
+  id               Int            @id @default(autoincrement())
+  userId           Int
+  knowledgePointId String
+  level            MasteryLevel
+  score            Int
+  attempts         Int
+  correctAttempts  Int
+  lastPracticedAt  DateTime?
+  user             User           @relation(fields: [userId], references: [id])
+  knowledgePoint   KnowledgePoint @relation(fields: [knowledgePointId], references: [id])
+
+  @@unique([userId, knowledgePointId])
+  @@map("mastery_records")
+}
+
+model QuestionSource {
+  id           String             @id
+  userId       Int
+  type         QuestionSourceType
+  title        String
+  provider     String
+  licenseScope LicenseScope
+  importedAt   DateTime
+  note         String
+  user         User               @relation(fields: [userId], references: [id])
+  questions    Question[]
+  assets       QuestionAsset[]
+
+  @@map("question_sources")
+}
+
+model QuestionAsset {
+  id            String             @id
+  userId        Int
+  sourceId      String
+  fileName      String
+  mimeType      String
+  byteSize      Int
+  extractedText String             @db.Text
+  status        AssetProcessStatus
+  createdAt     DateTime
+  user          User               @relation(fields: [userId], references: [id])
+  source        QuestionSource     @relation(fields: [sourceId], references: [id])
+
+  @@map("question_assets")
+}
+
+model Question {
+  id         String                   @id
+  sourceId   String
+  subject    StudySubject
+  type       QuestionType
+  difficulty Int
+  stem       String                   @db.Text
+  answer     String                   @db.Text
+  analysis   String                   @db.Text
+  createdAt  DateTime
+  source     QuestionSource           @relation(fields: [sourceId], references: [id])
+  points     QuestionKnowledgePoint[]
+  mistakes   Mistake[]
+
+  @@map("questions")
+}
+
+model QuestionKnowledgePoint {
+  questionId       String
+  knowledgePointId String
+  question         Question       @relation(fields: [questionId], references: [id])
+  knowledgePoint   KnowledgePoint @relation(fields: [knowledgePointId], references: [id])
+
+  @@id([questionId, knowledgePointId])
+  @@map("question_knowledge_points")
+}
+
+model Mistake {
+  id            String                  @id
+  userId        Int
+  questionId    String
+  subject       StudySubject
+  studentAnswer String                  @db.Text
+  scoreLost     Float
+  causes        Json
+  diagnosis     String                  @db.Text
+  nextRule      String                  @db.Text
+  reviewStage   Int
+  createdAt     DateTime
+  user          User                    @relation(fields: [userId], references: [id])
+  question      Question                @relation(fields: [questionId], references: [id])
+  points        MistakeKnowledgePoint[]
+
+  @@map("mistakes")
+}
+
+model MistakeKnowledgePoint {
+  mistakeId        String
+  knowledgePointId String
+  mistake          Mistake        @relation(fields: [mistakeId], references: [id])
+  knowledgePoint   KnowledgePoint @relation(fields: [knowledgePointId], references: [id])
+
+  @@id([mistakeId, knowledgePointId])
+  @@map("mistake_knowledge_points")
+}
+
+model StudyTask {
+  id               String       @id
+  userId           Int
+  title            String
+  subject          StudySubject
+  knowledgePointId String
+  minutes          Int
+  priority         Int
+  reason           String       @db.Text
+  status           TaskStatus
+  user             User         @relation(fields: [userId], references: [id])
+
+  @@map("study_tasks")
+}
+
+model ExamRecord {
+  id      String   @id
+  userId  Int
+  title   String
+  takenAt DateTime
+  scores  Json
+  total   Int
+  summary String   @db.Text
+  user    User     @relation(fields: [userId], references: [id])
+
+  @@map("exam_records")
 }
 
 enum UserRole {
   OWNER
   ADMIN
   USER
+}
+
+enum StudySubject {
+  CHINESE
+  MATH
+  ENGLISH
+  PHYSICS
+  CHEMISTRY
+  GEOGRAPHY
+}
+
+enum MasteryLevel {
+  UNSTARTED
+  UNDERSTOOD
+  BASIC
+  STABLE
+}
+
+enum QuestionType {
+  SINGLE_CHOICE
+  MULTIPLE_CHOICE
+  FILL_BLANK
+  CALCULATION
+  ESSAY
+  EXPERIMENT
+}
+
+enum QuestionSourceType {
+  MANUAL
+  IMAGE_OCR
+  PDF_IMPORT
+  WEB_IMPORT
+  GAOKAO_PAPER
+  AI_GENERATED
+  MISTAKE_VARIANT
+}
+
+enum LicenseScope {
+  PERSONAL_ONLY
+  AUTHORIZED
+  PUBLIC_REFERENCE
+  AI_GENERATED
+}
+
+enum TaskStatus {
+  PENDING
+  DONE
+}
+
+enum AssetProcessStatus {
+  PENDING_REVIEW
+  OCR_TEXT_PROVIDED
+  TEXT_EXTRACTED
+  AI_OCR_EXTRACTED
+  NEEDS_MANUAL_TEXT
 }

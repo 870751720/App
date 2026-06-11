@@ -10,6 +10,7 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "start": "node dist/server.js",
+    "test": "pnpm --filter @app/schemas build && pnpm --filter @app/domain build && pnpm build && node --test dist/data/*.test.js dist/routes/*.test.js",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {

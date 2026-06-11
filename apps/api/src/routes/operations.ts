@@ -3,9 +3,9 @@ import { getOperationsOverview } from "@app/domain";
 import { operationsOverviewSchema } from "@app/schemas";
 import { resolveSessionUser } from "./auth.js";
 
-export async function registerOperationsRoutes(app: FastifyInstance) {
+export async function registerOperationsRoutes(app: FastifyInstance, { jwtSecret }: { jwtSecret: string }) {
   app.get("/operations/overview", async (request, reply) => {
-    const user = resolveSessionUser(request);
+    const user = resolveSessionUser(request, jwtSecret);
 
     if (!user) {
       return reply.code(401).send({

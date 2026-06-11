@@ -164,6 +164,10 @@ ORM 选择 Prisma。
 
 复杂统计或性能敏感查询后续可以补充原生 SQL，但默认业务读写优先走 Prisma。
 
+用户账号同样存储在 MySQL `users` 表中。初始化账号由 API 通过 Prisma upsert 写入，密码使用 scrypt 哈希保存，会话 token 使用 `JWT_SECRET` 签名。
+
+AI 错题诊断、AI 出题和 OCR 都通过后端适配器接入外部 HTTP 服务。`AI_DIAGNOSIS_ENDPOINT` 可用于错题原因分析，`AI_QUESTION_ENDPOINT` 可用于同类题生成，`OCR_ENDPOINT` 可用于上传图片/PDF 文本提取；未配置或调用失败时，系统保留本地兜底流程，避免学习数据写入被外部服务可用性阻断。
+
 ## 部署方案
 
 采用单机 Docker Compose，不使用 Kubernetes。
@@ -176,6 +180,8 @@ Caddy
   -> api
 api
   -> mysql
+api-migrate
+  -> mysql
 ```
 
 选择 Docker Compose 的原因：
@@ -184,6 +190,8 @@ api
 - 运维成本低。
 - 服务关系清楚。
 - 未来换服务器也容易迁移。
+
+生产 Compose 使用 `mysql:8.4` 镜像提供 MySQL。API 镜像启动前先运行一次性 `api-migrate` 服务执行 `prisma migrate deploy`，迁移成功后 API 服务再启动。
 
 ## 反向代理
 
@@ -233,6 +241,9 @@ $env:GITHUB_TOKEN = (Get-Content D:\App\.secrets\github.env | Where-Object { $_ 
 敏感信息放 GitHub Actions Secrets，例如：
 
 - `DATABASE_URL`
+- `AI_DIAGNOSIS_API_KEY`
+- `AI_QUESTION_API_KEY`
+- `OCR_API_KEY`
 - `MYSQL_PASSWORD`
 - `MYSQL_ROOT_PASSWORD`
 - `JWT_SECRET`
@@ -243,6 +254,8 @@ $env:GITHUB_TOKEN = (Get-Content D:\App\.secrets\github.env | Where-Object { $_ 
 非敏感配置放 GitHub Actions Variables，例如：
 
 - `API_PORT`
+- `AI_DIAGNOSIS_ENDPOINT`
+- `AI_QUESTION_ENDPOINT`
 - `COMPOSE_PROJECT_NAME`
 - `DEPLOY_ENABLED`
 - `MYSQL_DATABASE`
@@ -251,6 +264,7 @@ $env:GITHUB_TOKEN = (Get-Content D:\App\.secrets\github.env | Where-Object { $_ 
 - `SITE_ADDRESS`
 - `WEB_ORIGIN`
 - `DEPLOY_PATH`
+- `OCR_ENDPOINT`
 - `WEB_IMAGE`
 - `API_IMAGE`
 

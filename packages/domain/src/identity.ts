@@ -16,13 +16,13 @@ export interface LoginCredential {
 export const roleLabels: Record<UserRole, string> = {
   owner: "Owner",
   admin: "管理员",
-  user: "普通用户"
+  user: "学生"
 };
 
 export const roleDescriptions: Record<UserRole, string> = {
-  owner: "拥有系统设置、部署入口和成员管理的最高权限。",
-  admin: "负责日常运维、项目维护和服务巡检。",
-  user: "查看个人项目、服务状态和基础运行信息。"
+  owner: "拥有系统配置、学习档案和数据导入的最高权限。",
+  admin: "负责复读计划维护、题源整理和学习报告查看。",
+  user: "查看个人学习任务、错题、掌握度和复盘报告。"
 };
 
 export const demoAccounts: Array<UserAccount & { password: string }> = [
@@ -36,19 +36,19 @@ export const demoAccounts: Array<UserAccount & { password: string }> = [
   },
   {
     id: "admin-ops",
-    name: "Ops Admin",
+    name: "Learning Admin",
     email: "admin@app.local",
     password: "admin123",
     role: "admin",
-    title: "运维管理员"
+    title: "学习管理员"
   },
   {
     id: "user-demo",
-    name: "Demo User",
+    name: "复读学生",
     email: "user@app.local",
     password: "user123",
     role: "user",
-    title: "普通成员"
+    title: "复读学生"
   }
 ];
 
