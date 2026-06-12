@@ -209,6 +209,11 @@ export const generateKnowledgePointDrillRequestSchema = z.object({
   count: z.number().int().min(1).max(12).default(6)
 });
 
+export const generateWeakPointDrillsRequestSchema = z.object({
+  pointCount: z.number().int().min(1).max(6).default(3),
+  questionsPerPoint: z.number().int().min(1).max(12).default(4)
+});
+
 export const generateDailyPlanRequestSchema = z.object({
   availableMinutes: z.number().int().min(20).max(720).default(180)
 });
@@ -260,6 +265,11 @@ export const updateMistakeReviewRequestSchema = z.object({
 export const generatedQuestionSetSchema = z.object({
   source: questionSourceSchema,
   questions: z.array(questionSchema).min(1)
+});
+
+export const weakPointDrillsResponseSchema = z.object({
+  imports: z.array(generatedQuestionSetSchema),
+  selectedKnowledgePointIds: z.array(z.string().min(1))
 });
 
 export const importWebPagesResponseSchema = z.object({
@@ -322,6 +332,7 @@ export type UploadQuestionAssetRequest = z.infer<typeof uploadQuestionAssetReque
 export type QuestionAsset = z.infer<typeof questionAssetSchema>;
 export type GenerateSimilarQuestionsRequest = z.infer<typeof generateSimilarQuestionsRequestSchema>;
 export type GenerateKnowledgePointDrillRequest = z.infer<typeof generateKnowledgePointDrillRequestSchema>;
+export type GenerateWeakPointDrillsRequest = z.infer<typeof generateWeakPointDrillsRequestSchema>;
 export type GenerateDailyPlanRequest = z.infer<typeof generateDailyPlanRequestSchema>;
 export type UpsertKnowledgePointRequest = z.infer<typeof upsertKnowledgePointRequestSchema>;
 export type UpdateMasteryRequest = z.infer<typeof updateMasteryRequestSchema>;
@@ -330,6 +341,7 @@ export type CreateExamRecordRequest = z.infer<typeof createExamRecordRequestSche
 export type CompleteStudyTaskRequest = z.infer<typeof completeStudyTaskRequestSchema>;
 export type UpdateMistakeReviewRequest = z.infer<typeof updateMistakeReviewRequestSchema>;
 export type GeneratedQuestionSet = z.infer<typeof generatedQuestionSetSchema>;
+export type WeakPointDrillsResponse = z.infer<typeof weakPointDrillsResponseSchema>;
 export type ImportWebPagesResponse = z.infer<typeof importWebPagesResponseSchema>;
 export type UploadedQuestionAsset = z.infer<typeof uploadedQuestionAssetSchema>;
 export type AiLearningContextResponse = z.infer<typeof aiLearningContextResponseSchema>;

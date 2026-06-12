@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { createInitialLearningOverview, generateKnowledgePointDrill, parseImportedQuestions } from "./learning.js";
+import { createInitialLearningOverview, generateKnowledgePointDrill, parseImportedQuestions, selectWeakKnowledgePoints } from "./learning.js";
 import { createSupplementalQuestionBank } from "./questionBank.js";
 import { getQuestionSourceCatalog } from "./questionSourceCatalog.js";
 import { generatedQuestionSetSchema, questionSourceCatalogItemSchema, type QuestionSource } from "@app/schemas";
@@ -93,6 +93,15 @@ test("generateKnowledgePointDrill returns valid AI generated candidates", () => 
   assert.equal(generated.questions.length, 6);
   assert.ok(generated.questions.every((question) => question.knowledgePointIds.includes(point.id)));
   assert.ok(generated.questions.every((question) => question.sourceId === drillSource.id));
+});
+
+test("selectWeakKnowledgePoints prioritizes low mastery and high weight points", () => {
+  const overview = createInitialLearningOverview(new Date("2026-06-12T00:00:00.000Z"));
+  const selected = selectWeakKnowledgePoints(overview.knowledgePoints, overview.mastery, overview.mistakes, 3);
+
+  assert.equal(selected.length, 3);
+  assert.equal(selected[0]?.point.id, "physics-electric");
+  assert.ok(selected.every((item) => item.point.id && item.mastery.knowledgePointId === item.point.id));
 });
 
 test("getQuestionSourceCatalog returns importable public source entries", () => {

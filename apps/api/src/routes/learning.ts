@@ -8,6 +8,7 @@ import {
   generateDailyPlanRequestSchema,
   generateKnowledgePointDrillRequestSchema,
   generateSimilarQuestionsRequestSchema,
+  generateWeakPointDrillsRequestSchema,
   generatedQuestionSetSchema,
   importQuestionSourceCatalogRequestSchema,
   importWebPageRequestSchema,
@@ -27,6 +28,7 @@ import {
   upsertKnowledgePointRequestSchema,
   uploadedQuestionAssetSchema,
   uploadQuestionAssetRequestSchema,
+  weakPointDrillsResponseSchema,
   weeklyReportSchema
 } from "@app/schemas";
 import type { LearningRepository } from "../data/learningRepository.js";
@@ -174,6 +176,16 @@ export async function registerLearningRoutes(app: FastifyInstance, { jwtSecret, 
 
       throw error;
     }
+  });
+
+  app.post("/learning/ai/generate-weak-point-drills", async (request, reply) => {
+    const user = requireUser(request, jwtSecret);
+    if (!user) {
+      return reply.code(401).send({ message: "Authentication required" });
+    }
+
+    const input = generateWeakPointDrillsRequestSchema.parse(request.body);
+    return weakPointDrillsResponseSchema.parse(await learningRepository.generateWeakPointDrills(user, input));
   });
 
   app.post("/learning/ai/generate-daily-plan", async (request, reply) => {

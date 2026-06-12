@@ -202,24 +202,9 @@ export function buildDailyPlan(
   mistakes: Mistake[],
   availableMinutes: number
 ): StudyTask[] {
-  const mistakeCounts = new Map<string, number>();
-  for (const mistake of mistakes) {
-    for (const knowledgePointId of mistake.knowledgePointIds) {
-      mistakeCounts.set(knowledgePointId, (mistakeCounts.get(knowledgePointId) ?? 0) + 1);
-    }
-  }
-
-  return [...mastery]
-    .sort((left, right) => {
-      const leftPoint = knowledgePoints.find((point) => point.id === left.knowledgePointId);
-      const rightPoint = knowledgePoints.find((point) => point.id === right.knowledgePointId);
-      const leftScore = left.score - (leftPoint?.examWeight ?? 1) * 6 - (mistakeCounts.get(left.knowledgePointId) ?? 0) * 12;
-      const rightScore = right.score - (rightPoint?.examWeight ?? 1) * 6 - (mistakeCounts.get(right.knowledgePointId) ?? 0) * 12;
-      return leftScore - rightScore;
-    })
+  return selectWeakKnowledgePoints(knowledgePoints, mastery, mistakes, 5)
     .slice(0, 5)
-    .map((record, index) => {
-      const point = knowledgePoints.find((candidate) => candidate.id === record.knowledgePointId);
+    .map(({ point, mastery: record }, index) => {
       const minutes = Math.max(20, Math.floor(availableMinutes / 5));
 
       return {
@@ -233,6 +218,35 @@ export function buildDailyPlan(
         status: "pending"
       };
     });
+}
+
+export function selectWeakKnowledgePoints(
+  knowledgePoints: KnowledgePoint[],
+  mastery: MasteryRecord[],
+  mistakes: Mistake[],
+  limit: number
+) {
+  const mistakeCounts = new Map<string, number>();
+  for (const mistake of mistakes) {
+    for (const knowledgePointId of mistake.knowledgePointIds) {
+      mistakeCounts.set(knowledgePointId, (mistakeCounts.get(knowledgePointId) ?? 0) + 1);
+    }
+  }
+
+  const pointById = new Map(knowledgePoints.map((point) => [point.id, point]));
+
+  return [...mastery]
+    .map((record) => {
+      const point = pointById.get(record.knowledgePointId);
+      return {
+        point,
+        mastery: record,
+        needScore: record.score - (point?.examWeight ?? 1) * 6 - (mistakeCounts.get(record.knowledgePointId) ?? 0) * 12
+      };
+    })
+    .filter((item): item is { point: KnowledgePoint; mastery: MasteryRecord; needScore: number } => Boolean(item.point))
+    .sort((left, right) => left.needScore - right.needScore)
+    .slice(0, limit);
 }
 
 export function generateSimilarQuestions(baseQuestion: Question, source: QuestionSource, count: number): GeneratedQuestionSet {

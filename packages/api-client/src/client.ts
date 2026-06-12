@@ -14,6 +14,7 @@ import {
   studyTaskSchema,
   uploadedQuestionAssetSchema,
   userAccountSchema,
+  weakPointDrillsResponseSchema,
   weeklyReportSchema,
   type AnalyzeMistakeRequest,
   type AnalyzeMistakeResponse,
@@ -25,6 +26,7 @@ import {
   type GenerateDailyPlanRequest,
   type GenerateKnowledgePointDrillRequest,
   type GenerateSimilarQuestionsRequest,
+  type GenerateWeakPointDrillsRequest,
   type HealthStatus,
   type ImportWebPageRequest,
   type ImportWebPagesRequest,
@@ -44,7 +46,8 @@ import {
   type UpsertKnowledgePointRequest,
   type UploadedQuestionAsset,
   type UploadQuestionAssetRequest,
-  type UserAccountResponse
+  type UserAccountResponse,
+  type WeakPointDrillsResponse
 } from "@app/schemas";
 
 export interface ApiClientOptions {
@@ -227,6 +230,17 @@ export function createApiClient({ baseUrl, fetcher = fetch }: ApiClientOptions) 
         "Knowledge point drill generation failed"
       );
       return generatedQuestionSetSchema.parse(payload);
+    },
+
+    async generateWeakPointDrills(token: string, input: GenerateWeakPointDrillsRequest): Promise<WeakPointDrillsResponse> {
+      const payload = await postJson(
+        fetcher,
+        `${normalizedBaseUrl}/learning/ai/generate-weak-point-drills`,
+        token,
+        input,
+        "Weak point drill generation failed"
+      );
+      return weakPointDrillsResponseSchema.parse(payload);
     },
 
     async generateDailyPlan(token: string, input: GenerateDailyPlanRequest): Promise<StudyTask[]> {

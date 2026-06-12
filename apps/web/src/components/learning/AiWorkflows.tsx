@@ -226,6 +226,21 @@ export function AiWorkflows({
     }
   }
 
+  async function generateWeakPointDrills() {
+    setVariantMessage("正在按薄弱知识点生成训练题...");
+    try {
+      const result = await apiClient.generateWeakPointDrills(token, {
+        pointCount: 3,
+        questionsPerPoint: 4
+      });
+      const questionCount = result.imports.reduce((sum, item) => sum + item.questions.length, 0);
+      setVariantMessage(`已为 ${result.selectedKnowledgePointIds.length} 个薄弱知识点生成 ${questionCount} 道训练题。`);
+      onRefresh();
+    } catch (error) {
+      setVariantMessage(getErrorMessage(error));
+    }
+  }
+
   return (
     <Section id="错题诊断" icon={<Brain className="size-5" />} title="AI 接口工作台">
       <div className="grid gap-3 xl:grid-cols-[1.1fr_0.9fr]">
@@ -360,6 +375,10 @@ export function AiWorkflows({
             <Button type="button" variant="secondary" onClick={() => void generateKnowledgePointDrill()}>
               <FlaskConical aria-hidden="true" className="size-4" />
               生成知识点题
+            </Button>
+            <Button type="button" variant="secondary" onClick={() => void generateWeakPointDrills()}>
+              <FlaskConical aria-hidden="true" className="size-4" />
+              一键补弱题
             </Button>
           </div>
           <Label text="上传图片/PDF/文本">
