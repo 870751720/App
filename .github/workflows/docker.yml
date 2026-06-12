@@ -66,13 +66,17 @@ jobs:
 
       - name: Configure SSH
         env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
           SERVER_HOST: ${{ secrets.SERVER_HOST }}
           SERVER_PORT: ${{ vars.SERVER_PORT || '22' }}
           SERVER_USER: ${{ secrets.SERVER_USER }}
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
         run: |
-          if [ -z "$SERVER_HOST" ] || [ -z "$SERVER_USER" ] || [ -z "$SSH_PRIVATE_KEY" ]; then
-            echo "::notice::Deployment skipped because SERVER_HOST, SERVER_USER, or SSH_PRIVATE_KEY is not configured."
+          if [ -z "$SERVER_HOST" ] || [ -z "$SERVER_USER" ] || [ -z "$SSH_PRIVATE_KEY" ] || [ -z "$DATABASE_URL" ] || [ -z "$JWT_SECRET" ] || [ -z "$MYSQL_PASSWORD" ] || [ -z "$MYSQL_ROOT_PASSWORD" ]; then
+            echo "::notice::Deployment skipped because one or more required deployment secrets are not configured."
             echo "DEPLOY_SKIPPED=true" >> "$GITHUB_ENV"
             exit 0
           fi
@@ -103,11 +107,9 @@ jobs:
           WEB_ORIGIN: ${{ vars.WEB_ORIGIN || 'http://localhost' }}
         run: |
           test -n "$DATABASE_URL"
+          test -n "$JWT_SECRET"
           test -n "$MYSQL_PASSWORD"
           test -n "$MYSQL_ROOT_PASSWORD"
-          if [ -z "$JWT_SECRET" ]; then
-            JWT_SECRET="$(openssl rand -base64 32)"
-          fi
           {
             printf 'COMPOSE_PROJECT_NAME=%s\n' "$COMPOSE_PROJECT_NAME"
             printf 'SITE_ADDRESS=%s\n' "$SITE_ADDRESS"
