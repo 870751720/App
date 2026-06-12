@@ -214,6 +214,11 @@ export const generateWeakPointDrillsRequestSchema = z.object({
   questionsPerPoint: z.number().int().min(1).max(12).default(4)
 });
 
+export const generateSubjectPracticeRequestSchema = z.object({
+  subject: subjectSchema,
+  count: z.number().int().min(4).max(30).default(12)
+});
+
 export const generateDailyPlanRequestSchema = z.object({
   availableMinutes: z.number().int().min(20).max(720).default(180)
 });
@@ -333,6 +338,7 @@ export type QuestionAsset = z.infer<typeof questionAssetSchema>;
 export type GenerateSimilarQuestionsRequest = z.infer<typeof generateSimilarQuestionsRequestSchema>;
 export type GenerateKnowledgePointDrillRequest = z.infer<typeof generateKnowledgePointDrillRequestSchema>;
 export type GenerateWeakPointDrillsRequest = z.infer<typeof generateWeakPointDrillsRequestSchema>;
+export type GenerateSubjectPracticeRequest = z.infer<typeof generateSubjectPracticeRequestSchema>;
 export type GenerateDailyPlanRequest = z.infer<typeof generateDailyPlanRequestSchema>;
 export type UpsertKnowledgePointRequest = z.infer<typeof upsertKnowledgePointRequestSchema>;
 export type UpdateMasteryRequest = z.infer<typeof updateMasteryRequestSchema>;

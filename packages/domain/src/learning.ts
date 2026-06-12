@@ -310,6 +310,29 @@ export function generateKnowledgePointDrill(point: KnowledgePoint, source: Quest
   return { source, questions };
 }
 
+export function generateSubjectPracticePaper(points: KnowledgePoint[], source: QuestionSource, count: number): GeneratedQuestionSet {
+  const sortedPoints = [...points].sort((left, right) => right.examWeight - left.examWeight || left.chapter.localeCompare(right.chapter) || left.name.localeCompare(right.name));
+  const questions: Question[] = Array.from({ length: count }, (_, index) => {
+    const point = sortedPoints[index % sortedPoints.length]!;
+    const type = inferDrillQuestionType(point.subject, index);
+
+    return {
+      id: `${source.id}-q-${index + 1}`,
+      sourceId: source.id,
+      subject: point.subject,
+      knowledgePointIds: [point.id],
+      type,
+      difficulty: Math.min(5, 2 + Math.floor(index / Math.max(1, Math.ceil(count / 4)))),
+      stem: buildDrillStem(point, index + 1, type),
+      answer: buildDrillAnswer(point, type),
+      analysis: "这是一道 AI 生成的学科套题候选题，用于覆盖同一科目下多个知识点；进入正式训练前需要人工校对题干、答案和解析。",
+      createdAt: source.importedAt
+    };
+  });
+
+  return { source, questions };
+}
+
 export function buildWeeklyReport(
   knowledgePoints: KnowledgePoint[],
   mastery: MasteryRecord[],

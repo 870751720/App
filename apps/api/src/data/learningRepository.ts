@@ -1,4 +1,4 @@
-import type { PrismaClient } from "@prisma/client";
+import type { Prisma, PrismaClient } from "@prisma/client";
 import {
   AssetProcessStatus,
   LicenseScope,
@@ -17,6 +17,7 @@ import {
   diagnoseMistake,
   generateKnowledgePointDrill,
   generateSimilarQuestions,
+  generateSubjectPracticePaper,
   getQuestionSourceCatalog,
   getQuestionSourceCatalogItem,
   parseImportedQuestions,
@@ -27,6 +28,7 @@ import {
   generateDailyPlanRequestSchema,
   generateKnowledgePointDrillRequestSchema,
   generateSimilarQuestionsRequestSchema,
+  generateSubjectPracticeRequestSchema,
   generateWeakPointDrillsRequestSchema,
   importQuestionSourceCatalogRequestSchema,
   importQuestionSourceRequestSchema,
@@ -42,6 +44,7 @@ import {
   type ExamRecord,
   type GeneratedQuestionSet,
   type GenerateKnowledgePointDrillRequest,
+  type GenerateSubjectPracticeRequest,
   type GenerateWeakPointDrillsRequest,
   type ImportWebPageRequest,
   type ImportWebPagesRequest,
@@ -89,6 +92,7 @@ export interface LearningRepository {
   generateSimilarQuestions(user: UserAccountResponse, questionId: string, count: number): Promise<GeneratedQuestionSet>;
   generateKnowledgePointDrill(user: UserAccountResponse, input: GenerateKnowledgePointDrillRequest): Promise<GeneratedQuestionSet>;
   generateWeakPointDrills(user: UserAccountResponse, input: GenerateWeakPointDrillsRequest): Promise<WeakPointDrillsResponse>;
+  generateSubjectPractice(user: UserAccountResponse, input: GenerateSubjectPracticeRequest): Promise<GeneratedQuestionSet>;
   generateDailyPlan(user: UserAccountResponse, availableMinutes: number): Promise<StudyTask[]>;
   getWeeklyReport(user: UserAccountResponse): Promise<WeeklyReport>;
   upsertKnowledgePoint(user: UserAccountResponse, input: UpsertKnowledgePointRequest): Promise<KnowledgePoint>;
@@ -610,6 +614,34 @@ export function createPrismaLearningRepository(prisma: PrismaClient, options: Cr
     };
   }
 
+  async function createSubjectPractice(user: UserAccountResponse, rawInput: GenerateSubjectPracticeRequest) {
+    const input = generateSubjectPracticeRequestSchema.parse(rawInput);
+    const dbUser = await ensureLearningProfile(user);
+    const profile = await readProfile(dbUser.id);
+    const points = profile.knowledgePoints.filter((point) => point.subject === input.subject);
+    if (points.length === 0) {
+      throw new Error("Subject knowledge points not found");
+    }
+
+    const now = new Date();
+    const source: QuestionSource = {
+      id: createStableId("src-ai-subject"),
+      type: "ai_generated",
+      title: `${getSubjectTitle(input.subject)}学科训练套题`,
+      provider: "local-ai-adapter",
+      licenseScope: "ai_generated",
+      importedAt: now.toISOString(),
+      note: `围绕${getSubjectTitle(input.subject)}多个知识点生成的个人训练套题，进入正式训练前需要人工校对。`
+    };
+    const generated = generateSubjectPracticePaper(points, source, input.count);
+
+    await prisma.$transaction(async (transaction) => {
+      await writeGeneratedQuestionSet(transaction, dbUser.id, generated, now);
+    });
+
+    return generated;
+  }
+
   async function generateDailyPlan(user: UserAccountResponse, availableMinutes: number) {
     const input = generateDailyPlanRequestSchema.parse({ availableMinutes });
     const dbUser = await ensureLearningProfile(user);
@@ -1122,6 +1154,44 @@ export function createPrismaLearningRepository(prisma: PrismaClient, options: Cr
     return tasks;
   }
 
+  async function writeGeneratedQuestionSet(transaction: Prisma.TransactionClient, userId: number, set: GeneratedQuestionSet, createdAt: Date) {
+    await transaction.questionSource.create({
+      data: {
+        id: set.source.id,
+        userId,
+        type: toDbQuestionSourceType(set.source.type),
+        title: set.source.title,
+        provider: set.source.provider,
+        licenseScope: toDbLicenseScope(set.source.licenseScope),
+        importedAt: createdAt,
+        note: set.source.note
+      }
+    });
+
+    for (const question of set.questions) {
+      await transaction.question.create({
+        data: {
+          id: question.id,
+          sourceId: set.source.id,
+          subject: toDbSubject(question.subject),
+          type: toDbQuestionType(question.type),
+          difficulty: question.difficulty,
+          stem: question.stem,
+          answer: question.answer,
+          analysis: question.analysis,
+          createdAt
+        }
+      });
+      await transaction.questionKnowledgePoint.createMany({
+        data: question.knowledgePointIds.map((knowledgePointId) => ({
+          questionId: question.id,
+          knowledgePointId
+        })),
+        skipDuplicates: true
+      });
+    }
+  }
+
   return {
     getOverview,
     getQuestionSourceCatalog: readQuestionSourceCatalog,
@@ -1134,6 +1204,7 @@ export function createPrismaLearningRepository(prisma: PrismaClient, options: Cr
     generateSimilarQuestions: createSimilarQuestions,
     generateKnowledgePointDrill: createKnowledgePointDrill,
     generateWeakPointDrills: createWeakPointDrills,
+    generateSubjectPractice: createSubjectPractice,
     generateDailyPlan,
     getWeeklyReport,
     upsertKnowledgePoint,

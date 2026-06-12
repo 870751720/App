@@ -194,6 +194,9 @@ function createLearningRepository(): LearningRepository {
     async generateWeakPointDrills() {
       return { imports: [], selectedKnowledgePointIds: [] };
     },
+    async generateSubjectPractice() {
+      throw new Error("not used");
+    },
     async generateDailyPlan() {
       return [];
     },

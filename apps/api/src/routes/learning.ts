@@ -8,6 +8,7 @@ import {
   generateDailyPlanRequestSchema,
   generateKnowledgePointDrillRequestSchema,
   generateSimilarQuestionsRequestSchema,
+  generateSubjectPracticeRequestSchema,
   generateWeakPointDrillsRequestSchema,
   generatedQuestionSetSchema,
   importQuestionSourceCatalogRequestSchema,
@@ -186,6 +187,25 @@ export async function registerLearningRoutes(app: FastifyInstance, { jwtSecret, 
 
     const input = generateWeakPointDrillsRequestSchema.parse(request.body);
     return weakPointDrillsResponseSchema.parse(await learningRepository.generateWeakPointDrills(user, input));
+  });
+
+  app.post("/learning/ai/generate-subject-practice", async (request, reply) => {
+    const user = requireUser(request, jwtSecret);
+    if (!user) {
+      return reply.code(401).send({ message: "Authentication required" });
+    }
+
+    const input = generateSubjectPracticeRequestSchema.parse(request.body);
+
+    try {
+      return generatedQuestionSetSchema.parse(await learningRepository.generateSubjectPractice(user, input));
+    } catch (error) {
+      if (error instanceof Error && error.message === "Subject knowledge points not found") {
+        return reply.code(404).send({ message: "Subject knowledge points not found" });
+      }
+
+      throw error;
+    }
   });
 
   app.post("/learning/ai/generate-daily-plan", async (request, reply) => {

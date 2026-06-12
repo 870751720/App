@@ -26,6 +26,7 @@ import {
   type GenerateDailyPlanRequest,
   type GenerateKnowledgePointDrillRequest,
   type GenerateSimilarQuestionsRequest,
+  type GenerateSubjectPracticeRequest,
   type GenerateWeakPointDrillsRequest,
   type HealthStatus,
   type ImportWebPageRequest,
@@ -241,6 +242,17 @@ export function createApiClient({ baseUrl, fetcher = fetch }: ApiClientOptions) 
         "Weak point drill generation failed"
       );
       return weakPointDrillsResponseSchema.parse(payload);
+    },
+
+    async generateSubjectPractice(token: string, input: GenerateSubjectPracticeRequest): Promise<GeneratedQuestionSet> {
+      const payload = await postJson(
+        fetcher,
+        `${normalizedBaseUrl}/learning/ai/generate-subject-practice`,
+        token,
+        input,
+        "Subject practice generation failed"
+      );
+      return generatedQuestionSetSchema.parse(payload);
     },
 
     async generateDailyPlan(token: string, input: GenerateDailyPlanRequest): Promise<StudyTask[]> {

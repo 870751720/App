@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { createInitialLearningOverview, generateKnowledgePointDrill, parseImportedQuestions, selectWeakKnowledgePoints } from "./learning.js";
+import { createInitialLearningOverview, generateKnowledgePointDrill, generateSubjectPracticePaper, parseImportedQuestions, selectWeakKnowledgePoints } from "./learning.js";
 import { createSupplementalQuestionBank } from "./questionBank.js";
 import { getQuestionSourceCatalog } from "./questionSourceCatalog.js";
 import { generatedQuestionSetSchema, questionSourceCatalogItemSchema, type QuestionSource } from "@app/schemas";
@@ -93,6 +93,28 @@ test("generateKnowledgePointDrill returns valid AI generated candidates", () => 
   assert.equal(generated.questions.length, 6);
   assert.ok(generated.questions.every((question) => question.knowledgePointIds.includes(point.id)));
   assert.ok(generated.questions.every((question) => question.sourceId === drillSource.id));
+});
+
+test("generateSubjectPracticePaper covers multiple subject knowledge points", () => {
+  const overview = createInitialLearningOverview(new Date("2026-06-12T00:00:00.000Z"));
+  const points = overview.knowledgePoints.filter((point) => point.subject === "math");
+  const paperSource: QuestionSource = {
+    id: "src-ai-subject-test",
+    type: "ai_generated",
+    title: "数学学科训练套题",
+    provider: "local-ai-adapter",
+    licenseScope: "ai_generated",
+    importedAt: "2026-06-12T00:00:00.000Z",
+    note: "测试"
+  };
+
+  const generated = generateSubjectPracticePaper(points, paperSource, 12);
+  const coveredPointIds = new Set(generated.questions.flatMap((question) => question.knowledgePointIds));
+
+  generatedQuestionSetSchema.parse(generated);
+  assert.equal(generated.questions.length, 12);
+  assert.equal(generated.questions.every((question) => question.subject === "math"), true);
+  assert.ok(coveredPointIds.size > 1);
 });
 
 test("selectWeakKnowledgePoints prioritizes low mastery and high weight points", () => {

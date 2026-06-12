@@ -241,6 +241,20 @@ export function AiWorkflows({
     }
   }
 
+  async function generateSubjectPractice() {
+    setVariantMessage("正在生成学科训练套题...");
+    try {
+      const result = await apiClient.generateSubjectPractice(token, {
+        subject: sourceForm.subject,
+        count: 12
+      });
+      setVariantMessage(`已生成 ${getSubjectLabel(sourceForm.subject)}训练套题，共 ${result.questions.length} 道题。`);
+      onRefresh();
+    } catch (error) {
+      setVariantMessage(getErrorMessage(error));
+    }
+  }
+
   return (
     <Section id="错题诊断" icon={<Brain className="size-5" />} title="AI 接口工作台">
       <div className="grid gap-3 xl:grid-cols-[1.1fr_0.9fr]">
@@ -379,6 +393,10 @@ export function AiWorkflows({
             <Button type="button" variant="secondary" onClick={() => void generateWeakPointDrills()}>
               <FlaskConical aria-hidden="true" className="size-4" />
               一键补弱题
+            </Button>
+            <Button type="button" variant="secondary" onClick={() => void generateSubjectPractice()}>
+              <FlaskConical aria-hidden="true" className="size-4" />
+              生成学科套题
             </Button>
           </div>
           <Label text="上传图片/PDF/文本">
