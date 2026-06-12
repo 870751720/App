@@ -65,6 +65,15 @@ pnpm --filter @app/mobile dev
 - 网站：http://localhost:5173
 - API 健康检查：http://localhost:3001/health
 
+## AI 数据接口
+
+配置 `AI_ACCESS_TOKEN` 后，外部 AI 工具可以通过以下接口读写学习数据，不需要网页聊天：
+
+- `GET /api/ai/learning/context`：读取绑定学生的知识点、掌握度、错题、题库、计划和周报。
+- `POST /api/ai/learning/ingest`：写入错题、题源文本、掌握度和考试成绩。
+
+请求使用 `Authorization: Bearer <AI_ACCESS_TOKEN>` 或 `x-ai-access-token: <AI_ACCESS_TOKEN>`。默认绑定学生账号由 `AI_STUDENT_EMAIL` 指定。
+
 ## 前端原则
 
 Web 页面按 mobile-first 响应式设计实现，必须兼容手机浏览器。移动 App 使用 React Native 自己的 UI 和样式体系，不与 Web 强行共用界面组件。

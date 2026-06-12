@@ -90,6 +90,8 @@ jobs:
         env:
           API_HOST: ${{ vars.API_HOST || '0.0.0.0' }}
           API_PORT: ${{ vars.API_PORT || '3001' }}
+          AI_ACCESS_TOKEN: ${{ secrets.AI_ACCESS_TOKEN }}
+          AI_STUDENT_EMAIL: ${{ vars.AI_STUDENT_EMAIL || 'user@app.local' }}
           AI_DIAGNOSIS_API_KEY: ${{ secrets.AI_DIAGNOSIS_API_KEY }}
           AI_DIAGNOSIS_ENDPOINT: ${{ vars.AI_DIAGNOSIS_ENDPOINT }}
           AI_QUESTION_API_KEY: ${{ secrets.AI_QUESTION_API_KEY }}
@@ -122,6 +124,8 @@ jobs:
             printf 'WEB_ORIGIN=%s\n' "$WEB_ORIGIN"
             printf 'API_HOST=%s\n' "$API_HOST"
             printf 'API_PORT=%s\n' "$API_PORT"
+            printf 'AI_ACCESS_TOKEN=%s\n' "$AI_ACCESS_TOKEN"
+            printf 'AI_STUDENT_EMAIL=%s\n' "$AI_STUDENT_EMAIL"
             printf 'AI_DIAGNOSIS_ENDPOINT=%s\n' "$AI_DIAGNOSIS_ENDPOINT"
             printf 'AI_DIAGNOSIS_API_KEY=%s\n' "$AI_DIAGNOSIS_API_KEY"
             printf 'AI_QUESTION_ENDPOINT=%s\n' "$AI_QUESTION_ENDPOINT"

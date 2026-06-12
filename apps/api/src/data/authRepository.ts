@@ -9,9 +9,16 @@ const keyLength = 64;
 
 export interface AuthRepository {
   authenticate(input: LoginRequest): Promise<UserAccountResponse | null>;
+  findByEmail(email: string): Promise<UserAccountResponse | null>;
 }
 
 export function createPrismaAuthRepository(prisma: PrismaClient): AuthRepository {
+  async function findByEmail(email: string) {
+    await seedInitialAccounts(prisma);
+    const user = await prisma.user.findUnique({ where: { email } });
+    return user ? toPublicUser(user) : null;
+  }
+
   async function authenticate(input: LoginRequest) {
     await seedInitialAccounts(prisma);
     const user = await prisma.user.findUnique({ where: { email: input.email } });
@@ -23,7 +30,7 @@ export function createPrismaAuthRepository(prisma: PrismaClient): AuthRepository
     return toPublicUser(user);
   }
 
-  return { authenticate };
+  return { authenticate, findByEmail };
 }
 
 export async function hashPassword(password: string, salt = randomBytes(16).toString("hex")) {

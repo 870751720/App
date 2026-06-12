@@ -9,6 +9,8 @@ const envSchema = z.object({
   DATABASE_URL: z.string().url(),
   JWT_SECRET: z.string().min(16),
   WEB_ORIGIN: z.string().url().default("http://localhost:5173"),
+  AI_ACCESS_TOKEN: optionalNonEmptyString,
+  AI_STUDENT_EMAIL: z.string().email().default("user@app.local"),
   AI_DIAGNOSIS_ENDPOINT: optionalUrl,
   AI_DIAGNOSIS_API_KEY: optionalNonEmptyString,
   AI_QUESTION_ENDPOINT: optionalUrl,

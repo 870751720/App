@@ -29,6 +29,8 @@ const mistakeDiagnosisAdapter = env.AI_DIAGNOSIS_ENDPOINT
   : undefined;
 const app = await createApiApp({
   authRepository: createPrismaAuthRepository(prisma),
+  aiAccessToken: env.AI_ACCESS_TOKEN,
+  aiStudentEmail: env.AI_STUDENT_EMAIL,
   healthCheck: async () => {
     try {
       await prisma.$queryRaw`SELECT 1`;

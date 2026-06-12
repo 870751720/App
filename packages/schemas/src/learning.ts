@@ -245,6 +245,26 @@ export const uploadedQuestionAssetSchema = z.object({
   questions: z.array(questionSchema)
 });
 
+export const aiLearningContextResponseSchema = z.object({
+  studentEmail: z.string().email(),
+  overview: learningOverviewSchema
+});
+
+export const aiLearningIngestRequestSchema = z.object({
+  mistakes: z.array(analyzeMistakeRequestSchema).default([]),
+  questionSources: z.array(importQuestionSourceRequestSchema).default([]),
+  mastery: z.array(updateMasteryRequestSchema).default([]),
+  exams: z.array(createExamRecordRequestSchema).default([])
+});
+
+export const aiLearningIngestResponseSchema = z.object({
+  mistakes: z.array(analyzeMistakeResponseSchema),
+  questionSources: z.array(generatedQuestionSetSchema),
+  mastery: z.array(masteryRecordSchema),
+  exams: z.array(examRecordSchema),
+  overview: learningOverviewSchema
+});
+
 export type Subject = z.infer<typeof subjectSchema>;
 export type MasteryLevel = z.infer<typeof masteryLevelSchema>;
 export type QuestionType = z.infer<typeof questionTypeSchema>;
@@ -277,3 +297,6 @@ export type UpdateMistakeReviewRequest = z.infer<typeof updateMistakeReviewReque
 export type GeneratedQuestionSet = z.infer<typeof generatedQuestionSetSchema>;
 export type ImportWebPagesResponse = z.infer<typeof importWebPagesResponseSchema>;
 export type UploadedQuestionAsset = z.infer<typeof uploadedQuestionAssetSchema>;
+export type AiLearningContextResponse = z.infer<typeof aiLearningContextResponseSchema>;
+export type AiLearningIngestRequest = z.infer<typeof aiLearningIngestRequestSchema>;
+export type AiLearningIngestResponse = z.infer<typeof aiLearningIngestResponseSchema>;

@@ -168,6 +168,8 @@ ORM 选择 Prisma。
 
 AI 错题诊断、AI 出题和 OCR 都通过后端适配器接入外部 HTTP 服务。`AI_DIAGNOSIS_ENDPOINT` 可用于错题原因分析，`AI_QUESTION_ENDPOINT` 可用于同类题生成，`OCR_ENDPOINT` 可用于上传图片/PDF 文本提取；未配置或调用失败时，系统保留本地兜底流程，避免学习数据写入被外部服务可用性阻断。
 
+外部 AI 工具不使用网页登录态，后端提供独立的 AI 数据接口。配置 `AI_ACCESS_TOKEN` 后，公网 `/api/ai/learning/context` 可读取绑定学生的结构化学习画像，`/api/ai/learning/ingest` 可写入错题、题源、掌握度和考试数据；`AI_STUDENT_EMAIL` 用于指定这些接口绑定的学生账号。
+
 ## 部署方案
 
 采用单机 Docker Compose，不使用 Kubernetes。
@@ -241,6 +243,7 @@ $env:GITHUB_TOKEN = (Get-Content D:\App\.secrets\github.env | Where-Object { $_ 
 敏感信息放 GitHub Actions Secrets，例如：
 
 - `DATABASE_URL`
+- `AI_ACCESS_TOKEN`
 - `AI_DIAGNOSIS_API_KEY`
 - `AI_QUESTION_API_KEY`
 - `OCR_API_KEY`
@@ -254,6 +257,7 @@ $env:GITHUB_TOKEN = (Get-Content D:\App\.secrets\github.env | Where-Object { $_ 
 非敏感配置放 GitHub Actions Variables，例如：
 
 - `API_PORT`
+- `AI_STUDENT_EMAIL`
 - `AI_DIAGNOSIS_ENDPOINT`
 - `AI_QUESTION_ENDPOINT`
 - `COMPOSE_PROJECT_NAME`
