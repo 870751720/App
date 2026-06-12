@@ -68,16 +68,21 @@ jobs:
         env:
           SERVER_HOST: ${{ secrets.SERVER_HOST }}
           SERVER_PORT: ${{ vars.SERVER_PORT || '22' }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
         run: |
-          test -n "$SERVER_HOST"
-          test -n "$SSH_PRIVATE_KEY"
+          if [ -z "$SERVER_HOST" ] || [ -z "$SERVER_USER" ] || [ -z "$SSH_PRIVATE_KEY" ]; then
+            echo "::notice::Deployment skipped because SERVER_HOST, SERVER_USER, or SSH_PRIVATE_KEY is not configured."
+            echo "DEPLOY_SKIPPED=true" >> "$GITHUB_ENV"
+            exit 0
+          fi
           mkdir -p ~/.ssh
           printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -p "$SERVER_PORT" "$SERVER_HOST" >> ~/.ssh/known_hosts
 
       - name: Write production environment
+        if: env.DEPLOY_SKIPPED != 'true'
         env:
           API_HOST: ${{ vars.API_HOST || '0.0.0.0' }}
           API_PORT: ${{ vars.API_PORT || '3001' }}
@@ -126,6 +131,7 @@ jobs:
           } > .deploy.env
 
       - name: Sync deployment files
+        if: env.DEPLOY_SKIPPED != 'true'
         env:
           DEPLOY_PATH: ${{ vars.DEPLOY_PATH || 'app' }}
           SERVER_HOST: ${{ secrets.SERVER_HOST }}
@@ -139,6 +145,7 @@ jobs:
           scp -P "$SERVER_PORT" .deploy.env "$SERVER_USER@$SERVER_HOST:$DEPLOY_PATH/infra/compose/.env"
 
       - name: Pull and restart containers
+        if: env.DEPLOY_SKIPPED != 'true'
         env:
           DEPLOY_PATH: ${{ vars.DEPLOY_PATH || 'app' }}
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}

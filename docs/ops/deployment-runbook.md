@@ -31,7 +31,7 @@ ssh root@43.110.116.98
 
 生产 Compose 会启动 `mysql:8.4`。API 启动前会先运行一次性 `api-migrate` 服务执行 `prisma migrate deploy`，迁移成功后 API 才会进入运行状态。
 
-当前 CI 和镜像发布已经跑通。自动 deploy job 默认在 `main` 分支执行；需要临时关闭自动部署时，将仓库变量 `DEPLOY_ENABLED` 设为 `false`。
+当前 CI 和镜像发布已经跑通。自动 deploy job 默认在 `main` 分支执行，但前提是仓库已配置 `SERVER_HOST`、`SERVER_USER`、`SSH_PRIVATE_KEY` 这些部署 Secrets；需要临时关闭自动部署时，将仓库变量 `DEPLOY_ENABLED` 设为 `false`。
 
 ## GitHub Secrets
 
