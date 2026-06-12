@@ -212,6 +212,20 @@ export function AiWorkflows({
     }
   }
 
+  async function generateKnowledgePointDrill() {
+    setVariantMessage("正在生成知识点训练题...");
+    try {
+      const result = await apiClient.generateKnowledgePointDrill(token, {
+        knowledgePointId: sourceForm.knowledgePointId,
+        count: 6
+      });
+      setVariantMessage(`已生成 ${result.questions.length} 道知识点训练题。`);
+      onRefresh();
+    } catch (error) {
+      setVariantMessage(getErrorMessage(error));
+    }
+  }
+
   return (
     <Section id="错题诊断" icon={<Brain className="size-5" />} title="AI 接口工作台">
       <div className="grid gap-3 xl:grid-cols-[1.1fr_0.9fr]">
@@ -343,6 +357,10 @@ export function AiWorkflows({
                 生成同类题
               </Button>
             ) : null}
+            <Button type="button" variant="secondary" onClick={() => void generateKnowledgePointDrill()}>
+              <FlaskConical aria-hidden="true" className="size-4" />
+              生成知识点题
+            </Button>
           </div>
           <Label text="上传图片/PDF/文本">
             <input

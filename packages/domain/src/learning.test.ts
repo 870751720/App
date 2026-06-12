@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { createInitialLearningOverview, parseImportedQuestions } from "./learning.js";
+import { createInitialLearningOverview, generateKnowledgePointDrill, parseImportedQuestions } from "./learning.js";
 import { createSupplementalQuestionBank } from "./questionBank.js";
 import { getQuestionSourceCatalog } from "./questionSourceCatalog.js";
 import { generatedQuestionSetSchema, questionSourceCatalogItemSchema, type QuestionSource } from "@app/schemas";
@@ -72,6 +72,27 @@ test("createInitialLearningOverview gives every knowledge point a mastery record
   for (const point of overview.knowledgePoints) {
     assert.equal(masteryIds.has(point.id), true, `missing mastery for ${point.id}`);
   }
+});
+
+test("generateKnowledgePointDrill returns valid AI generated candidates", () => {
+  const overview = createInitialLearningOverview(new Date("2026-06-12T00:00:00.000Z"));
+  const point = overview.knowledgePoints.find((candidate) => candidate.id === "physics-electric")!;
+  const drillSource: QuestionSource = {
+    id: "src-ai-kp-test",
+    type: "ai_generated",
+    title: "知识点训练题",
+    provider: "local-ai-adapter",
+    licenseScope: "ai_generated",
+    importedAt: "2026-06-12T00:00:00.000Z",
+    note: "测试"
+  };
+
+  const generated = generateKnowledgePointDrill(point, drillSource, 6);
+
+  generatedQuestionSetSchema.parse(generated);
+  assert.equal(generated.questions.length, 6);
+  assert.ok(generated.questions.every((question) => question.knowledgePointIds.includes(point.id)));
+  assert.ok(generated.questions.every((question) => question.sourceId === drillSource.id));
 });
 
 test("getQuestionSourceCatalog returns importable public source entries", () => {

@@ -23,6 +23,7 @@ import {
   type ExamRecord,
   type GeneratedQuestionSet,
   type GenerateDailyPlanRequest,
+  type GenerateKnowledgePointDrillRequest,
   type GenerateSimilarQuestionsRequest,
   type HealthStatus,
   type ImportWebPageRequest,
@@ -214,6 +215,17 @@ export function createApiClient({ baseUrl, fetcher = fetch }: ApiClientOptions) 
       }
 
       const payload: unknown = await response.json();
+      return generatedQuestionSetSchema.parse(payload);
+    },
+
+    async generateKnowledgePointDrill(token: string, input: GenerateKnowledgePointDrillRequest): Promise<GeneratedQuestionSet> {
+      const payload = await postJson(
+        fetcher,
+        `${normalizedBaseUrl}/learning/ai/generate-knowledge-point-drill`,
+        token,
+        input,
+        "Knowledge point drill generation failed"
+      );
       return generatedQuestionSetSchema.parse(payload);
     },
 

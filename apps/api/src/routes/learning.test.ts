@@ -76,6 +76,9 @@ function createLearningRepository(): LearningRepository {
     async generateSimilarQuestions() {
       throw new Error("not used");
     },
+    async generateKnowledgePointDrill() {
+      throw new Error("not used");
+    },
     async generateDailyPlan() {
       return [];
     },

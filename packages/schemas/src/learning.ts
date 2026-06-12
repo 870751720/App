@@ -204,6 +204,11 @@ export const generateSimilarQuestionsRequestSchema = z.object({
   count: z.number().int().min(1).max(8).default(4)
 });
 
+export const generateKnowledgePointDrillRequestSchema = z.object({
+  knowledgePointId: z.string().min(1),
+  count: z.number().int().min(1).max(12).default(6)
+});
+
 export const generateDailyPlanRequestSchema = z.object({
   availableMinutes: z.number().int().min(20).max(720).default(180)
 });
@@ -316,6 +321,7 @@ export type ImportQuestionSourceCatalogRequest = z.infer<typeof importQuestionSo
 export type UploadQuestionAssetRequest = z.infer<typeof uploadQuestionAssetRequestSchema>;
 export type QuestionAsset = z.infer<typeof questionAssetSchema>;
 export type GenerateSimilarQuestionsRequest = z.infer<typeof generateSimilarQuestionsRequestSchema>;
+export type GenerateKnowledgePointDrillRequest = z.infer<typeof generateKnowledgePointDrillRequestSchema>;
 export type GenerateDailyPlanRequest = z.infer<typeof generateDailyPlanRequestSchema>;
 export type UpsertKnowledgePointRequest = z.infer<typeof upsertKnowledgePointRequestSchema>;
 export type UpdateMasteryRequest = z.infer<typeof updateMasteryRequestSchema>;

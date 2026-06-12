@@ -15,6 +15,7 @@ import {
   createInitialLearningOverview,
   createSupplementalQuestionBank,
   diagnoseMistake,
+  generateKnowledgePointDrill,
   generateSimilarQuestions,
   getQuestionSourceCatalog,
   getQuestionSourceCatalogItem,
@@ -23,6 +24,7 @@ import {
 import {
   analyzeMistakeRequestSchema,
   generateDailyPlanRequestSchema,
+  generateKnowledgePointDrillRequestSchema,
   generateSimilarQuestionsRequestSchema,
   importQuestionSourceCatalogRequestSchema,
   importQuestionSourceRequestSchema,
@@ -37,6 +39,7 @@ import {
   type CreateExamRecordRequest,
   type ExamRecord,
   type GeneratedQuestionSet,
+  type GenerateKnowledgePointDrillRequest,
   type ImportWebPageRequest,
   type ImportWebPagesRequest,
   type ImportWebPagesResponse,
@@ -80,6 +83,7 @@ export interface LearningRepository {
   importQuestionSourceCatalog(user: UserAccountResponse, input: ImportQuestionSourceCatalogRequest): Promise<ImportWebPagesResponse>;
   uploadQuestionAsset(user: UserAccountResponse, input: UploadQuestionAssetRequest): Promise<UploadedQuestionAsset>;
   generateSimilarQuestions(user: UserAccountResponse, questionId: string, count: number): Promise<GeneratedQuestionSet>;
+  generateKnowledgePointDrill(user: UserAccountResponse, input: GenerateKnowledgePointDrillRequest): Promise<GeneratedQuestionSet>;
   generateDailyPlan(user: UserAccountResponse, availableMinutes: number): Promise<StudyTask[]>;
   getWeeklyReport(user: UserAccountResponse): Promise<WeeklyReport>;
   upsertKnowledgePoint(user: UserAccountResponse, input: UpsertKnowledgePointRequest): Promise<KnowledgePoint>;
@@ -437,6 +441,68 @@ export function createPrismaLearningRepository(prisma: PrismaClient, options: Cr
           id: source.id,
           userId: dbUser.id,
           type: QuestionSourceType.MISTAKE_VARIANT,
+          title: source.title,
+          provider: source.provider,
+          licenseScope: LicenseScope.AI_GENERATED,
+          importedAt: now,
+          note: source.note
+        }
+      });
+
+      for (const question of generated.questions) {
+        await transaction.question.create({
+          data: {
+            id: question.id,
+            sourceId: source.id,
+            subject: toDbSubject(question.subject),
+            type: toDbQuestionType(question.type),
+            difficulty: question.difficulty,
+            stem: question.stem,
+            answer: question.answer,
+            analysis: question.analysis,
+            createdAt: now
+          }
+        });
+        await transaction.questionKnowledgePoint.createMany({
+          data: question.knowledgePointIds.map((knowledgePointId) => ({
+            questionId: question.id,
+            knowledgePointId
+          })),
+          skipDuplicates: true
+        });
+      }
+    });
+
+    return generated;
+  }
+
+  async function createKnowledgePointDrill(user: UserAccountResponse, rawInput: GenerateKnowledgePointDrillRequest) {
+    const input = generateKnowledgePointDrillRequestSchema.parse(rawInput);
+    const dbUser = await ensureLearningProfile(user);
+    const profile = await readProfile(dbUser.id);
+    const point = profile.knowledgePoints.find((candidate) => candidate.id === input.knowledgePointId);
+    if (!point) {
+      throw new Error("Knowledge point not found");
+    }
+
+    const now = new Date();
+    const source: QuestionSource = {
+      id: createStableId("src-ai-kp"),
+      type: "ai_generated",
+      title: `${getSubjectTitle(point.subject)}知识点训练题`,
+      provider: "local-ai-adapter",
+      licenseScope: "ai_generated",
+      importedAt: now.toISOString(),
+      note: `围绕“${point.name}”生成的个人训练题，进入正式训练前需要人工校对。`
+    };
+    const generated = generateKnowledgePointDrill(point, source, input.count);
+
+    await prisma.$transaction(async (transaction) => {
+      await transaction.questionSource.create({
+        data: {
+          id: source.id,
+          userId: dbUser.id,
+          type: QuestionSourceType.AI_GENERATED,
           title: source.title,
           provider: source.provider,
           licenseScope: LicenseScope.AI_GENERATED,
@@ -994,6 +1060,7 @@ export function createPrismaLearningRepository(prisma: PrismaClient, options: Cr
     importQuestionSourceCatalog: importCatalogSources,
     uploadQuestionAsset,
     generateSimilarQuestions: createSimilarQuestions,
+    generateKnowledgePointDrill: createKnowledgePointDrill,
     generateDailyPlan,
     getWeeklyReport,
     upsertKnowledgePoint,
@@ -1179,6 +1246,18 @@ function fromDbSubject(subject: StudySubject): Subject {
     PHYSICS: "physics",
     CHEMISTRY: "chemistry",
     GEOGRAPHY: "geography"
+  };
+  return map[subject];
+}
+
+function getSubjectTitle(subject: Subject) {
+  const map: Record<Subject, string> = {
+    chinese: "语文",
+    math: "数学",
+    english: "英语",
+    physics: "物理",
+    chemistry: "化学",
+    geography: "地理"
   };
   return map[subject];
 }

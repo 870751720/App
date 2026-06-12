@@ -275,6 +275,27 @@ export function parseImportedQuestions(input: {
   }));
 }
 
+export function generateKnowledgePointDrill(point: KnowledgePoint, source: QuestionSource, count: number): GeneratedQuestionSet {
+  const questions: Question[] = Array.from({ length: count }, (_, index) => {
+    const type = inferDrillQuestionType(point.subject, index);
+
+    return {
+      id: `${source.id}-q-${index + 1}`,
+      sourceId: source.id,
+      subject: point.subject,
+      knowledgePointIds: [point.id],
+      type,
+      difficulty: Math.min(5, 2 + (index % 4)),
+      stem: buildDrillStem(point, index + 1, type),
+      answer: buildDrillAnswer(point, type),
+      analysis: "这是一道 AI 生成的个人训练题，重点用于暴露知识点薄弱环节；进入正式训练前需要人工校对题干、答案和解析。",
+      createdAt: source.importedAt
+    };
+  });
+
+  return { source, questions };
+}
+
 export function buildWeeklyReport(
   knowledgePoints: KnowledgePoint[],
   mastery: MasteryRecord[],
@@ -342,6 +363,51 @@ function inferQuestionType(stem: string): Question["type"] {
     return "essay";
   }
   return "calculation";
+}
+
+function inferDrillQuestionType(subject: Subject, index: number): Question["type"] {
+  const patterns: Record<Subject, Question["type"][]> = {
+    chinese: ["essay", "single_choice", "essay"],
+    math: ["calculation", "single_choice", "calculation"],
+    english: ["single_choice", "fill_blank", "essay"],
+    physics: ["calculation", "experiment", "single_choice"],
+    chemistry: ["experiment", "calculation", "single_choice"],
+    geography: ["single_choice", "essay", "fill_blank"]
+  };
+
+  const options = patterns[subject];
+  return options[index % options.length] ?? "calculation";
+}
+
+function buildDrillStem(point: KnowledgePoint, sequence: number, type: Question["type"]) {
+  const subjectLabel = getSubjectLabel(point.subject);
+  const prefix = `${subjectLabel}${point.chapter} - ${point.name} 训练 ${sequence}`;
+
+  if (type === "single_choice") {
+    return `${prefix}：围绕“${point.name}”设置一个真实高考风格情境，下列判断最合理的是哪一项？A. 只看表面条件即可 B. 先提取限制条件并建立模型 C. 跳过单位或范围检查 D. 只记结论不用说明理由`;
+  }
+  if (type === "fill_blank") {
+    return `${prefix}：请补全关键步骤。解答“${point.name}”类问题时，应先明确____，再进行推理或计算，最后检查____与题干是否一致。`;
+  }
+  if (type === "experiment") {
+    return `${prefix}：设计或分析一个与“${point.name}”有关的实验/探究任务，写出核心变量、数据处理方法和一个容易失分的注意点。`;
+  }
+  if (type === "essay") {
+    return `${prefix}：阅读一段与“${point.name}”相关的材料，概括核心信息，并用规范术语说明解题思路或论证结构。`;
+  }
+
+  return `${prefix}：给出一个包含两个约束条件的综合问题，要求列出已知条件、建立关系式，完成计算或推导，并说明答案成立的范围。`;
+}
+
+function buildDrillAnswer(point: KnowledgePoint, type: Question["type"]) {
+  if (type === "single_choice") {
+    return "参考答案：B。先提取限制条件并建立模型，再完成判断。";
+  }
+  if (type === "fill_blank") {
+    return "参考答案：条件/对象/范围；单位/范围/逻辑。";
+  }
+
+  return `参考答案需围绕“${point.name}”展开：先审清条件，再选择方法，最后用题干要求校验结论。`;
 }
 
 function inferDifficulty(stem: string) {

@@ -6,6 +6,7 @@ import {
   createExamRecordRequestSchema,
   examRecordSchema,
   generateDailyPlanRequestSchema,
+  generateKnowledgePointDrillRequestSchema,
   generateSimilarQuestionsRequestSchema,
   generatedQuestionSetSchema,
   importQuestionSourceCatalogRequestSchema,
@@ -150,6 +151,25 @@ export async function registerLearningRoutes(app: FastifyInstance, { jwtSecret, 
     } catch (error) {
       if (error instanceof Error && error.message === "Question not found") {
         return reply.code(404).send({ message: "Question not found" });
+      }
+
+      throw error;
+    }
+  });
+
+  app.post("/learning/ai/generate-knowledge-point-drill", async (request, reply) => {
+    const user = requireUser(request, jwtSecret);
+    if (!user) {
+      return reply.code(401).send({ message: "Authentication required" });
+    }
+
+    const input = generateKnowledgePointDrillRequestSchema.parse(request.body);
+
+    try {
+      return generatedQuestionSetSchema.parse(await learningRepository.generateKnowledgePointDrill(user, input));
+    } catch (error) {
+      if (error instanceof Error && error.message === "Knowledge point not found") {
+        return reply.code(404).send({ message: "Knowledge point not found" });
       }
 
       throw error;
