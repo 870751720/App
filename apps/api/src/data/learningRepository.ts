@@ -677,20 +677,7 @@ export function createPrismaLearningRepository(prisma: PrismaClient, options: Cr
 
     await seedKnowledgePoints(initial.knowledgePoints);
 
-    const masteryCount = await prisma.masteryRecord.count({ where: { userId: dbUser.id } });
-    if (masteryCount === 0) {
-      await prisma.masteryRecord.createMany({
-        data: initial.mastery.map((record) => ({
-          userId: dbUser.id,
-          knowledgePointId: record.knowledgePointId,
-          level: toDbMasteryLevel(record.level),
-          score: record.score,
-          attempts: record.attempts,
-          correctAttempts: record.correctAttempts,
-          lastPracticedAt: record.lastPracticedAt ? new Date(record.lastPracticedAt) : null
-        }))
-      });
-    }
+    await seedMissingMasteryRecords(dbUser.id, initial.mastery);
 
     const sourceCount = await prisma.questionSource.count({ where: { userId: dbUser.id } });
     if (sourceCount === 0) {
@@ -741,6 +728,29 @@ export function createPrismaLearningRepository(prisma: PrismaClient, options: Cr
           parentId: point.parentId,
           examWeight: point.examWeight
         }
+      });
+    }
+  }
+
+  async function seedMissingMasteryRecords(userId: number, records: MasteryRecord[]) {
+    for (const record of records) {
+      await prisma.masteryRecord.upsert({
+        where: {
+          userId_knowledgePointId: {
+            userId,
+            knowledgePointId: record.knowledgePointId
+          }
+        },
+        create: {
+          userId,
+          knowledgePointId: record.knowledgePointId,
+          level: toDbMasteryLevel(record.level),
+          score: record.score,
+          attempts: record.attempts,
+          correctAttempts: record.correctAttempts,
+          lastPracticedAt: record.lastPracticedAt ? new Date(record.lastPracticedAt) : null
+        },
+        update: {}
       });
     }
   }

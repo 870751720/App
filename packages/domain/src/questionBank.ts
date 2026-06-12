@@ -58,6 +58,42 @@ const supplementalQuestionSets: QuestionSetSeed[] = [
         stem: "已知偶函数 f(x) 在 [0,+∞) 上单调递增，下列结论正确的是：A. f(-2)<f(1) B. f(-2)=f(2) C. f(-1)>f(2) D. f(0)>f(1)",
         answer: "B。",
         analysis: "偶函数满足 f(-x)=f(x)，因此 f(-2)=f(2)。单调性只用于比较非负自变量上的函数值。"
+      },
+      {
+        id: "q-bank-math-005",
+        knowledgePointIds: ["math-trig"],
+        type: "calculation",
+        difficulty: 3,
+        stem: "已知 sin x=3/5，且 x 为第二象限角，求 cos 2x 的值。",
+        answer: "cos 2x = 7/25。",
+        analysis: "第二象限 cos x<0，但 cos2x=1-2sin^2x=1-18/25=7/25，与 cos x 的符号无直接关系。"
+      },
+      {
+        id: "q-bank-math-006",
+        knowledgePointIds: ["math-trig"],
+        type: "single_choice",
+        difficulty: 3,
+        stem: "函数 y=2sin(2x+π/3) 的最小正周期是：A. π/2 B. π C. 2π D. 4π",
+        answer: "B。",
+        analysis: "y=Asin(ωx+φ) 的周期为 2π/|ω|，这里 ω=2，所以周期为 π。"
+      },
+      {
+        id: "q-bank-math-007",
+        knowledgePointIds: ["math-probability"],
+        type: "calculation",
+        difficulty: 4,
+        stem: "袋中有 3 个红球、2 个白球，不放回任取 2 个。求至少取到 1 个红球的概率。",
+        answer: "9/10。",
+        analysis: "用对立事件更快：至少 1 个红球的对立是 2 个全为白球，概率为 C(2,2)/C(5,2)=1/10，所以所求为 9/10。"
+      },
+      {
+        id: "q-bank-math-008",
+        knowledgePointIds: ["math-probability"],
+        type: "calculation",
+        difficulty: 4,
+        stem: "随机变量 X 的分布列为 P(X=0)=0.2，P(X=1)=0.5，P(X=2)=0.3，求 E(X) 与 D(X)。",
+        answer: "E(X)=1.1，D(X)=0.49。",
+        analysis: "E(X)=0×0.2+1×0.5+2×0.3=1.1；E(X^2)=0+0.5+4×0.3=1.7，所以 D(X)=1.7-1.1^2=0.49。"
       }
     ]
   },
@@ -101,6 +137,42 @@ const supplementalQuestionSets: QuestionSetSeed[] = [
         stem: "理想电压表内阻应尽可能大，接入电路时主要目的是：A. 减小被测电路电流改变 B. 增大总电流 C. 提高电源电压 D. 消除导线电阻",
         answer: "A。",
         analysis: "电压表并联测量，内阻越大，分流越小，对原电路影响越小。"
+      },
+      {
+        id: "q-bank-physics-005",
+        knowledgePointIds: ["physics-energy"],
+        type: "calculation",
+        difficulty: 4,
+        stem: "质量 1 kg 的物体从粗糙斜面顶端由静止下滑，下降高度 2 m，到底端速度 4 m/s，取 g=10 m/s^2，求克服摩擦力做功。",
+        answer: "12 J。",
+        analysis: "重力势能减少 mgh=20 J，动能增加 1/2mv^2=8 J，机械能减少 12 J，即克服摩擦力做功 12 J。"
+      },
+      {
+        id: "q-bank-physics-006",
+        knowledgePointIds: ["physics-energy"],
+        type: "calculation",
+        difficulty: 4,
+        stem: "两小车在光滑水平面上相向运动并粘在一起，碰前动量大小相等、方向相反。碰后整体速度如何？机械能是否守恒？",
+        answer: "碰后整体速度为 0，机械能不守恒。",
+        analysis: "系统总动量为 0，完全非弹性碰撞后仍为 0；粘在一起说明有机械能转化为内能，机械能不守恒。"
+      },
+      {
+        id: "q-bank-physics-007",
+        knowledgePointIds: ["physics-experiment"],
+        type: "experiment",
+        difficulty: 3,
+        stem: "用打点计时器研究匀变速直线运动时，为什么常取相邻若干段位移差来求加速度？",
+        answer: "可以利用 Δx=aT^2，并通过多段数据平均减小偶然误差。",
+        analysis: "实验题要把公式来源和误差控制都说清楚，不能只写一个计算式。"
+      },
+      {
+        id: "q-bank-physics-008",
+        knowledgePointIds: ["physics-experiment"],
+        type: "experiment",
+        difficulty: 4,
+        stem: "测电源电动势和内阻时，若电压表内阻不是无限大，实验结果中电动势和内阻通常会怎样偏差？",
+        answer: "通常测得电动势偏小、内阻偏小。",
+        analysis: "电压表分流使外电路等效变化，U-I 图线截距和斜率都会受影响；复习时应结合等效电路分析偏差方向。"
       }
     ]
   },
@@ -144,6 +216,42 @@ const supplementalQuestionSets: QuestionSetSeed[] = [
         stem: "设计实验比较 Mg、Al、Fe 与稀盐酸反应快慢时，至少需要控制哪些变量？",
         answer: "金属表面积、金属质量或物质的量、盐酸浓度、温度、搅拌条件等。",
         analysis: "比较反应速率必须单一变量控制，否则金属活泼性与接触面积、浓度、温度等因素会混在一起。"
+      },
+      {
+        id: "q-bank-chem-005",
+        knowledgePointIds: ["chem-ions"],
+        type: "calculation",
+        difficulty: 3,
+        stem: "向含 Ba2+ 的溶液中滴加 SO4^2- 溶液生成白色沉淀，写出离子方程式。",
+        answer: "Ba2+ + SO4^2- = BaSO4↓。",
+        analysis: "离子方程式只保留实际参加反应的离子，硫酸钡是难溶物，要写沉淀符号。"
+      },
+      {
+        id: "q-bank-chem-006",
+        knowledgePointIds: ["chem-ions"],
+        type: "single_choice",
+        difficulty: 3,
+        stem: "下列离子在强酸性溶液中能大量共存的是：A. CO3^2- B. OH- C. Cl- D. HCO3-",
+        answer: "C。",
+        analysis: "强酸性中 CO3^2-、OH-、HCO3- 都会与 H+ 反应，Cl- 通常可大量存在。"
+      },
+      {
+        id: "q-bank-chem-007",
+        knowledgePointIds: ["chem-organic"],
+        type: "single_choice",
+        difficulty: 3,
+        stem: "能使酸性 KMnO4 溶液褪色的有机物通常含有：A. 烷烃单键 B. 苯环稳定结构 C. 碳碳双键 D. 饱和卤代烃",
+        answer: "C。",
+        analysis: "碳碳双键易被氧化，可使酸性高锰酸钾褪色；但具体题目仍需注意苯环侧链等特殊情况。"
+      },
+      {
+        id: "q-bank-chem-008",
+        knowledgePointIds: ["chem-organic"],
+        type: "calculation",
+        difficulty: 4,
+        stem: "某酯水解后得到乙酸和乙醇，写出该酯的结构简式，并说明判断依据。",
+        answer: "CH3COOCH2CH3。",
+        analysis: "酯水解断裂酰氧键，酸端来自羧酸，醇端来自醇；乙酸与乙醇对应乙酸乙酯。"
       }
     ]
   },
@@ -187,6 +295,42 @@ const supplementalQuestionSets: QuestionSetSeed[] = [
         stem: "同一纬度大陆西岸和东岸降水差异明显，说明可能的环流或洋流原因。",
         answer: "大陆西岸可能受副热带高压、离岸风或寒流影响而少雨；大陆东岸可能受季风、暖流或来自海洋气流影响而多雨。",
         analysis: "要把降水差异落到水汽来源、气流上升条件和洋流性质三类因素。"
+      },
+      {
+        id: "q-bank-geo-005",
+        knowledgePointIds: ["geography-earth"],
+        type: "calculation",
+        difficulty: 3,
+        stem: "若某地正午太阳高度在一年中变化明显，且夏至日达到最大，说明该地可能位于哪一半球？",
+        answer: "北半球。",
+        analysis: "北半球夏至日前后太阳直射点位于北回归线附近，北半球多数地区正午太阳高度达到全年较大值。"
+      },
+      {
+        id: "q-bank-geo-006",
+        knowledgePointIds: ["geography-earth"],
+        type: "essay",
+        difficulty: 4,
+        stem: "等高线图中，河流流向应如何判断？如果等高线向高处弯曲，河谷方向如何确定？",
+        answer: "河流从高处流向低处；等高线穿过河谷时凸向高处，凸出方向指向上游。",
+        analysis: "等值线题要先读数值变化，再看弯曲方向。河谷等高线凸向高值区，是判断水系方向的常用依据。"
+      },
+      {
+        id: "q-bank-geo-007",
+        knowledgePointIds: ["geography-human"],
+        type: "essay",
+        difficulty: 3,
+        stem: "分析电子信息产业布局时，除市场外还应重点考虑哪些区位因素？",
+        answer: "科技人才、交通通信、产业协作、政策环境、创新平台和生活服务条件等。",
+        analysis: "新兴产业区位不能只写原料和能源，要突出技术、人才、信息和产业链协同。"
+      },
+      {
+        id: "q-bank-geo-008",
+        knowledgePointIds: ["geography-human"],
+        type: "essay",
+        difficulty: 4,
+        stem: "某资源型城市转型发展文旅和新能源产业，可能带来哪些积极影响？",
+        answer: "优化产业结构、增加就业、改善生态环境、提升城市形象、降低对单一资源的依赖。",
+        analysis: "区域发展题按经济、社会、生态三类影响组织答案，注意写出从资源依赖到多元发展的逻辑。"
       }
     ]
   },
@@ -230,6 +374,42 @@ const supplementalQuestionSets: QuestionSetSeed[] = [
         stem: "When the author says a new tool 'lowers the barrier', the closest meaning is: A. makes something easier to start B. builds a wall C. reduces quality D. hides information",
         answer: "A。",
         analysis: "barrier 是障碍，lower the barrier 表示降低门槛，使进入或开始更容易。"
+      },
+      {
+        id: "q-bank-english-005",
+        knowledgePointIds: ["english-cloze"],
+        type: "single_choice",
+        difficulty: 3,
+        stem: "Choose the best word: The team kept testing the device until it finally worked ______. A. properly B. hardly C. rarely D. nearly",
+        answer: "A。",
+        analysis: "properly 表示正常地、恰当地，符合 repeatedly testing until it worked 的语境。"
+      },
+      {
+        id: "q-bank-english-006",
+        knowledgePointIds: ["english-cloze"],
+        type: "fill_blank",
+        difficulty: 3,
+        stem: "Fill in the blank with one word: It was his careful planning ______ made the project successful.",
+        answer: "that。",
+        analysis: "这是强调句型 It was...that...，强调 careful planning。"
+      },
+      {
+        id: "q-bank-english-007",
+        knowledgePointIds: ["english-writing"],
+        type: "essay",
+        difficulty: 3,
+        stem: "Write one opening sentence for an application letter to a school volunteer program.",
+        answer: "I am writing to apply for the volunteer position in your school program.",
+        analysis: "应用文开头要直接说明写信目的，避免铺垫过长。"
+      },
+      {
+        id: "q-bank-english-008",
+        knowledgePointIds: ["english-writing"],
+        type: "essay",
+        difficulty: 4,
+        stem: "In continuation writing, how can a student make the second paragraph connect naturally with the given story?",
+        answer: "Use the same characters, conflict, emotional tone and key objects from the original story, then show a clear change or resolution.",
+        analysis: "读后续写重在衔接原文线索和情感走向，不能另起一个与原文无关的新故事。"
       }
     ]
   },
@@ -273,6 +453,42 @@ const supplementalQuestionSets: QuestionSetSeed[] = [
         stem: "一篇议论文开头只有排比和抒情，没有明确观点，可能造成什么问题？如何修改？",
         answer: "问题是阅卷者难以快速把握立意。修改时应在抒情后加入清晰中心论点，并点明材料关键词。",
         analysis: "高考作文开头要兼顾表达和判分效率，观点越早清晰，后文越容易形成结构。"
+      },
+      {
+        id: "q-bank-chinese-005",
+        knowledgePointIds: ["chinese-reading"],
+        type: "essay",
+        difficulty: 3,
+        stem: "论述类文本中，题目要求分析某段的论证作用，答题时应从哪些角度组织？",
+        answer: "可从提出或承接观点、使用论据、论证方法、与上下文结构关系、服务中心论点等角度作答。",
+        analysis: "论证作用题不能只概括内容，还要说明它在论证链条中的位置和作用。"
+      },
+      {
+        id: "q-bank-chinese-006",
+        knowledgePointIds: ["chinese-reading"],
+        type: "essay",
+        difficulty: 4,
+        stem: "文学类文本中反复出现同一意象，通常可能有哪些作用？",
+        answer: "可能推动情节、烘托氛围、暗示人物心理、强化主题、形成结构照应。",
+        analysis: "意象作用题要结合具体语境，不要机械罗列；至少写出内容、结构、主题三个层面。"
+      },
+      {
+        id: "q-bank-chinese-007",
+        knowledgePointIds: ["chinese-classical"],
+        type: "essay",
+        difficulty: 3,
+        stem: "文言翻译中遇到省略句，应如何处理？",
+        answer: "先根据上下文补出省略的主语、宾语或介词宾语，再按现代汉语语序通顺表达。",
+        analysis: "文言翻译要落实字词、句式和语境，省略成分不补会导致句意不完整。"
+      },
+      {
+        id: "q-bank-chinese-008",
+        knowledgePointIds: ["chinese-classical"],
+        type: "essay",
+        difficulty: 4,
+        stem: "诗歌鉴赏中问“以景结情”的表达效果，答题要点是什么？",
+        answer: "用景物画面收束全诗，使情感含蓄不尽，形成余味，并通过景物特征暗示诗人情绪。",
+        analysis: "表达效果题要同时写手法、画面、情感和读者感受，避免只说“情景交融”。"
       }
     ]
   }
