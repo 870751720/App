@@ -151,18 +151,24 @@ export const importQuestionSourceRequestSchema = z.object({
   title: z.string().min(1),
   provider: z.string().min(1),
   rawText: z.string().min(1),
-  url: z.string().url().optional()
+  url: z.string().url().optional(),
+  subject: subjectSchema.optional(),
+  knowledgePointId: z.string().min(1).optional()
 });
 
 export const importWebPageRequestSchema = z.object({
   url: z.string().url(),
   title: z.string().min(1).optional(),
-  provider: z.string().min(1).default("web")
+  provider: z.string().min(1).default("web"),
+  subject: subjectSchema.optional(),
+  knowledgePointId: z.string().min(1).optional()
 });
 
 export const importWebPagesRequestSchema = z.object({
   urls: z.array(z.string().url()).min(1).max(20),
-  provider: z.string().min(1).default("web")
+  provider: z.string().min(1).default("web"),
+  subject: subjectSchema.optional(),
+  knowledgePointId: z.string().min(1).optional()
 });
 
 export const uploadQuestionAssetRequestSchema = z.object({

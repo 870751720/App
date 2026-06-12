@@ -39,7 +39,9 @@ export function AiWorkflows({
     title: "个人上传题源",
     provider: "personal",
     rawText: "在这里粘贴教辅、试卷或网页中的题目文本。",
-    url: ""
+    url: "",
+    subject: firstPoint?.subject ?? "math" as Subject,
+    knowledgePointId: firstPoint?.id ?? "math-derivative"
   });
   const [batchUrls, setBatchUrls] = useState("");
 
@@ -69,7 +71,9 @@ export function AiWorkflows({
         title: sourceForm.title,
         provider: sourceForm.provider,
         rawText: sourceForm.rawText,
-        url: sourceForm.url || undefined
+        url: sourceForm.url || undefined,
+        subject: sourceForm.subject,
+        knowledgePointId: sourceForm.knowledgePointId
       });
       setImportMessage(`已导入 ${result.questions.length} 道候选题，需要人工核对。`);
       onRefresh();
@@ -89,7 +93,9 @@ export function AiWorkflows({
       const result = await apiClient.importWebPage(token, {
         url: sourceForm.url,
         title: sourceForm.title,
-        provider: sourceForm.provider || "web"
+        provider: sourceForm.provider || "web",
+        subject: sourceForm.subject,
+        knowledgePointId: sourceForm.knowledgePointId
       });
       setImportMessage(`已从网页导入 ${result.questions.length} 道候选题。`);
       onRefresh();
@@ -112,7 +118,9 @@ export function AiWorkflows({
     try {
       const result = await apiClient.importWebPages(token, {
         urls,
-        provider: sourceForm.provider || "web"
+        provider: sourceForm.provider || "web",
+        subject: sourceForm.subject,
+        knowledgePointId: sourceForm.knowledgePointId
       });
       const questionCount = result.imports.reduce((sum, item) => sum + item.questions.length, 0);
       setImportMessage(`批量导入完成：成功 ${result.imports.length} 页、${questionCount} 道候选题，失败 ${result.failed.length} 页。`);
@@ -209,6 +217,28 @@ export function AiWorkflows({
           <Label text="来源">
             <input className="field" value={sourceForm.provider} onChange={(event) => setSourceForm({ ...sourceForm, provider: event.target.value })} />
           </Label>
+          <div className="grid gap-3 md:grid-cols-2">
+            <Label text="科目">
+              <select
+                className="field"
+                value={sourceForm.subject}
+                onChange={(event) => {
+                  const subject = event.target.value as Subject;
+                  const point = data.knowledgePoints.find((candidate) => candidate.subject === subject);
+                  setSourceForm({ ...sourceForm, subject, knowledgePointId: point?.id ?? sourceForm.knowledgePointId });
+                }}
+              >
+                {subjectOptions.map((subject) => <option key={subject} value={subject}>{getSubjectLabel(subject)}</option>)}
+              </select>
+            </Label>
+            <Label text="知识点">
+              <select className="field" value={sourceForm.knowledgePointId} onChange={(event) => setSourceForm({ ...sourceForm, knowledgePointId: event.target.value })}>
+                {data.knowledgePoints
+                  .filter((point) => point.subject === sourceForm.subject)
+                  .map((point) => <option key={point.id} value={point.id}>{point.name}</option>)}
+              </select>
+            </Label>
+          </div>
           <Label text="公开网页地址，可空">
             <input className="field" value={sourceForm.url} onChange={(event) => setSourceForm({ ...sourceForm, url: event.target.value })} />
           </Label>

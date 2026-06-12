@@ -13,6 +13,7 @@ import {
   buildDailyPlan,
   buildWeeklyReport,
   createInitialLearningOverview,
+  createSupplementalQuestionBank,
   diagnoseMistake,
   generateSimilarQuestions,
   parseImportedQuestions
@@ -167,10 +168,7 @@ export function createPrismaLearningRepository(prisma: PrismaClient, options: Cr
   async function importQuestionSource(user: UserAccountResponse, rawInput: ImportQuestionSourceRequest) {
     const input = importQuestionSourceRequestSchema.parse(rawInput);
     const dbUser = await ensureLearningProfile(user);
-    const firstPoint = await prisma.knowledgePoint.findFirst({ orderBy: [{ subject: "asc" }, { chapter: "asc" }, { name: "asc" }] });
-    if (!firstPoint) {
-      throw new Error("No knowledge point configured");
-    }
+    const importPoint = await resolveImportPoint(input.subject, input.knowledgePointId);
 
     const now = new Date();
     const sourceId = createStableId("src-import");
@@ -186,8 +184,8 @@ export function createPrismaLearningRepository(prisma: PrismaClient, options: Cr
     const questions = parseImportedQuestions({
       rawText: input.rawText,
       source,
-      subject: fromDbSubject(firstPoint.subject),
-      knowledgePointId: firstPoint.id
+      subject: input.subject ?? fromDbSubject(importPoint.subject),
+      knowledgePointId: importPoint.id
     });
     if (questions.length === 0) {
       throw new Error("No question text found");
@@ -240,7 +238,9 @@ export function createPrismaLearningRepository(prisma: PrismaClient, options: Cr
       title: input.title ?? new URL(input.url).hostname,
       provider: input.provider,
       rawText,
-      url: input.url
+      url: input.url,
+      subject: input.subject,
+      knowledgePointId: input.knowledgePointId
     });
   }
 
@@ -253,7 +253,9 @@ export function createPrismaLearningRepository(prisma: PrismaClient, options: Cr
         imports.push(await importWebPage(user, {
           url,
           title: new URL(url).hostname,
-          provider: input.provider
+          provider: input.provider,
+          subject: input.subject,
+          knowledgePointId: input.knowledgePointId
         }));
       } catch (error) {
         failed.push({
@@ -649,6 +651,7 @@ export function createPrismaLearningRepository(prisma: PrismaClient, options: Cr
     if (sourceCount === 0) {
       await seedQuestionsAndMistakes(dbUser.id, initial);
     }
+    await seedSupplementalQuestions(dbUser.id);
 
     const examCount = await prisma.examRecord.count({ where: { userId: dbUser.id } });
     if (examCount === 0) {
@@ -764,6 +767,83 @@ export function createPrismaLearningRepository(prisma: PrismaClient, options: Cr
         });
       }
     });
+  }
+
+  async function seedSupplementalQuestions(userId: number) {
+    const sets = createSupplementalQuestionBank();
+
+    await prisma.$transaction(async (transaction) => {
+      for (const set of sets) {
+        const sourceId = `${set.source.id}-${userId}`;
+        const existingSource = await transaction.questionSource.findUnique({ where: { id: sourceId } });
+        if (existingSource) {
+          continue;
+        }
+
+        await transaction.questionSource.create({
+          data: {
+            id: sourceId,
+            userId,
+            type: toDbQuestionSourceType(set.source.type),
+            title: set.source.title,
+            provider: set.source.provider,
+            licenseScope: toDbLicenseScope(set.source.licenseScope),
+            importedAt: new Date(set.source.importedAt),
+            note: set.source.note
+          }
+        });
+
+        for (const question of set.questions) {
+          const questionId = `${question.id}-${userId}`;
+          await transaction.question.create({
+            data: {
+              id: questionId,
+              sourceId,
+              subject: toDbSubject(question.subject),
+              type: toDbQuestionType(question.type),
+              difficulty: question.difficulty,
+              stem: question.stem,
+              answer: question.answer,
+              analysis: question.analysis,
+              createdAt: new Date(question.createdAt)
+            }
+          });
+          await transaction.questionKnowledgePoint.createMany({
+            data: question.knowledgePointIds.map((knowledgePointId) => ({
+              questionId,
+              knowledgePointId
+            })),
+            skipDuplicates: true
+          });
+        }
+      }
+    });
+  }
+
+  async function resolveImportPoint(subject?: Subject, knowledgePointId?: string) {
+    if (knowledgePointId) {
+      const point = await prisma.knowledgePoint.findUnique({ where: { id: knowledgePointId } });
+      if (point) {
+        return point;
+      }
+    }
+
+    const pointBySubject = subject
+      ? await prisma.knowledgePoint.findFirst({
+          where: { subject: toDbSubject(subject) },
+          orderBy: [{ examWeight: "desc" }, { chapter: "asc" }, { name: "asc" }]
+        })
+      : null;
+    if (pointBySubject) {
+      return pointBySubject;
+    }
+
+    const fallback = await prisma.knowledgePoint.findFirst({ orderBy: [{ subject: "asc" }, { chapter: "asc" }, { name: "asc" }] });
+    if (!fallback) {
+      throw new Error("No knowledge point configured");
+    }
+
+    return fallback;
   }
 
   async function readProfile(userId: number): Promise<LearningOverviewResponse> {

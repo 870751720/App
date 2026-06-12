@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { parseImportedQuestions } from "./learning.js";
-import type { QuestionSource } from "@app/schemas";
+import { createSupplementalQuestionBank } from "./questionBank.js";
+import { generatedQuestionSetSchema, type QuestionSource } from "@app/schemas";
 
 const source: QuestionSource = {
   id: "src-test",
@@ -48,4 +49,16 @@ test("parseImportedQuestions returns no candidates for blank text", () => {
   });
 
   assert.deepEqual(questions, []);
+});
+
+test("createSupplementalQuestionBank returns valid six-subject training sets", () => {
+  const sets = createSupplementalQuestionBank(new Date("2026-06-12T00:00:00.000Z"));
+
+  assert.equal(sets.length, 6);
+  assert.equal(sets.reduce((sum, set) => sum + set.questions.length, 0), 24);
+  for (const set of sets) {
+    generatedQuestionSetSchema.parse(set);
+    assert.equal(set.source.licenseScope, "ai_generated");
+    assert.ok(set.questions.every((question) => question.knowledgePointIds.length > 0));
+  }
 });
