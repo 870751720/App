@@ -135,6 +135,9 @@ function createLearningRepository(): LearningRepository {
     async getOverview() {
       return overview;
     },
+    async getQuestionSourceCatalog() {
+      return [];
+    },
     async analyzeMistake() {
       return {
         causes: ["method_gap"],
@@ -174,6 +177,9 @@ function createLearningRepository(): LearningRepository {
       throw new Error("not used");
     },
     async importWebPages() {
+      return { imports: [], failed: [] };
+    },
+    async importQuestionSourceCatalog() {
       return { imports: [], failed: [] };
     },
     async uploadQuestionAsset() {

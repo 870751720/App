@@ -2,7 +2,8 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { parseImportedQuestions } from "./learning.js";
 import { createSupplementalQuestionBank } from "./questionBank.js";
-import { generatedQuestionSetSchema, type QuestionSource } from "@app/schemas";
+import { getQuestionSourceCatalog } from "./questionSourceCatalog.js";
+import { generatedQuestionSetSchema, questionSourceCatalogItemSchema, type QuestionSource } from "@app/schemas";
 
 const source: QuestionSource = {
   id: "src-test",
@@ -60,5 +61,16 @@ test("createSupplementalQuestionBank returns valid six-subject training sets", (
     generatedQuestionSetSchema.parse(set);
     assert.equal(set.source.licenseScope, "ai_generated");
     assert.ok(set.questions.every((question) => question.knowledgePointIds.length > 0));
+  }
+});
+
+test("getQuestionSourceCatalog returns importable public source entries", () => {
+  const sources = getQuestionSourceCatalog();
+
+  assert.ok(sources.length >= 6);
+  assert.ok(sources.some((source) => source.tags.includes("四川")));
+  for (const source of sources) {
+    questionSourceCatalogItemSchema.parse(source);
+    assert.match(source.url, /^https:\/\//);
   }
 });

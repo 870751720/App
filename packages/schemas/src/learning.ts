@@ -171,6 +171,26 @@ export const importWebPagesRequestSchema = z.object({
   knowledgePointId: z.string().min(1).optional()
 });
 
+export const questionSourceCatalogItemSchema = z.object({
+  id: z.string().min(1),
+  title: z.string().min(1),
+  provider: z.string().min(1),
+  url: z.string().url(),
+  subject: subjectSchema,
+  knowledgePointId: z.string().min(1),
+  sourceType: z.enum(["web_import", "gaokao_paper"]),
+  note: z.string().min(1),
+  tags: z.array(z.string().min(1)).min(1)
+});
+
+export const questionSourceCatalogResponseSchema = z.object({
+  sources: z.array(questionSourceCatalogItemSchema)
+});
+
+export const importQuestionSourceCatalogRequestSchema = z.object({
+  sourceIds: z.array(z.string().min(1)).min(1).max(20)
+});
+
 export const uploadQuestionAssetRequestSchema = z.object({
   fileName: z.string().min(1),
   mimeType: z.string().min(1),
@@ -290,6 +310,9 @@ export type AnalyzeMistakeResponse = z.infer<typeof analyzeMistakeResponseSchema
 export type ImportQuestionSourceRequest = z.infer<typeof importQuestionSourceRequestSchema>;
 export type ImportWebPageRequest = z.infer<typeof importWebPageRequestSchema>;
 export type ImportWebPagesRequest = z.infer<typeof importWebPagesRequestSchema>;
+export type QuestionSourceCatalogItem = z.infer<typeof questionSourceCatalogItemSchema>;
+export type QuestionSourceCatalogResponse = z.infer<typeof questionSourceCatalogResponseSchema>;
+export type ImportQuestionSourceCatalogRequest = z.infer<typeof importQuestionSourceCatalogRequestSchema>;
 export type UploadQuestionAssetRequest = z.infer<typeof uploadQuestionAssetRequestSchema>;
 export type QuestionAsset = z.infer<typeof questionAssetSchema>;
 export type GenerateSimilarQuestionsRequest = z.infer<typeof generateSimilarQuestionsRequestSchema>;

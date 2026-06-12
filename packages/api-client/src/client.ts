@@ -10,6 +10,7 @@ import {
   masteryRecordSchema,
   operationsOverviewSchema,
   questionSchema,
+  questionSourceCatalogResponseSchema,
   studyTaskSchema,
   uploadedQuestionAssetSchema,
   userAccountSchema,
@@ -28,11 +29,13 @@ import {
   type ImportWebPagesRequest,
   type ImportWebPagesResponse,
   type ImportQuestionSourceRequest,
+  type ImportQuestionSourceCatalogRequest,
   type KnowledgePoint,
   type LearningOverviewResponse,
   type MasteryRecord,
   type OperationsOverviewResponse,
   type Question,
+  type QuestionSourceCatalogResponse,
   type StudyTask,
   type UpdateMasteryRequest,
   type UpdateMistakeReviewRequest,
@@ -168,6 +171,26 @@ export function createApiClient({ baseUrl, fetcher = fetch }: ApiClientOptions) 
 
     async importWebPages(token: string, input: ImportWebPagesRequest): Promise<ImportWebPagesResponse> {
       const payload = await postJson(fetcher, `${normalizedBaseUrl}/learning/question-sources/import-web-batch`, token, input, "Web batch import failed");
+      return importWebPagesResponseSchema.parse(payload);
+    },
+
+    async getQuestionSourceCatalog(token: string): Promise<QuestionSourceCatalogResponse> {
+      const response = await fetcher(`${normalizedBaseUrl}/learning/question-source-catalog`, {
+        headers: {
+          authorization: `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Question source catalog request failed with status ${response.status}`);
+      }
+
+      const payload: unknown = await response.json();
+      return questionSourceCatalogResponseSchema.parse(payload);
+    },
+
+    async importQuestionSourceCatalog(token: string, input: ImportQuestionSourceCatalogRequest): Promise<ImportWebPagesResponse> {
+      const payload = await postJson(fetcher, `${normalizedBaseUrl}/learning/question-source-catalog/import`, token, input, "Catalog import failed");
       return importWebPagesResponseSchema.parse(payload);
     },
 

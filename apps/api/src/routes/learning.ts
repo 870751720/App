@@ -8,6 +8,7 @@ import {
   generateDailyPlanRequestSchema,
   generateSimilarQuestionsRequestSchema,
   generatedQuestionSetSchema,
+  importQuestionSourceCatalogRequestSchema,
   importWebPageRequestSchema,
   importWebPagesRequestSchema,
   importWebPagesResponseSchema,
@@ -17,6 +18,7 @@ import {
   masteryRecordSchema,
   mistakeSchema,
   questionSchema,
+  questionSourceCatalogResponseSchema,
   studyTaskSchema,
   updateMasteryRequestSchema,
   updateMistakeReviewRequestSchema,
@@ -102,6 +104,27 @@ export async function registerLearningRoutes(app: FastifyInstance, { jwtSecret, 
 
     const input = importWebPagesRequestSchema.parse(request.body);
     return importWebPagesResponseSchema.parse(await learningRepository.importWebPages(user, input));
+  });
+
+  app.get("/learning/question-source-catalog", async (request, reply) => {
+    const user = requireUser(request, jwtSecret);
+    if (!user) {
+      return reply.code(401).send({ message: "Authentication required" });
+    }
+
+    return questionSourceCatalogResponseSchema.parse({
+      sources: await learningRepository.getQuestionSourceCatalog()
+    });
+  });
+
+  app.post("/learning/question-source-catalog/import", async (request, reply) => {
+    const user = requireUser(request, jwtSecret);
+    if (!user) {
+      return reply.code(401).send({ message: "Authentication required" });
+    }
+
+    const input = importQuestionSourceCatalogRequestSchema.parse(request.body);
+    return importWebPagesResponseSchema.parse(await learningRepository.importQuestionSourceCatalog(user, input));
   });
 
   app.post("/learning/question-sources/upload", async (request, reply) => {

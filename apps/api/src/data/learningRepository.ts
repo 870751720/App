@@ -16,12 +16,15 @@ import {
   createSupplementalQuestionBank,
   diagnoseMistake,
   generateSimilarQuestions,
+  getQuestionSourceCatalog,
+  getQuestionSourceCatalogItem,
   parseImportedQuestions
 } from "@app/domain";
 import {
   analyzeMistakeRequestSchema,
   generateDailyPlanRequestSchema,
   generateSimilarQuestionsRequestSchema,
+  importQuestionSourceCatalogRequestSchema,
   importQuestionSourceRequestSchema,
   learningOverviewSchema,
   updateMasteryRequestSchema,
@@ -37,6 +40,7 @@ import {
   type ImportWebPageRequest,
   type ImportWebPagesRequest,
   type ImportWebPagesResponse,
+  type ImportQuestionSourceCatalogRequest,
   type ImportQuestionSourceRequest,
   type KnowledgePoint,
   type LearningOverviewResponse,
@@ -46,6 +50,7 @@ import {
   type MistakeCause,
   type Question,
   type QuestionAsset,
+  type QuestionSourceCatalogItem,
   type QuestionSource,
   type QuestionSourceType as ApiQuestionSourceType,
   type QuestionType as ApiQuestionType,
@@ -67,10 +72,12 @@ import { extractUploadText, fetchReadableWebText } from "./questionIngestion.js"
 
 export interface LearningRepository {
   getOverview(user: UserAccountResponse): Promise<LearningOverviewResponse>;
+  getQuestionSourceCatalog(): Promise<QuestionSourceCatalogItem[]>;
   analyzeMistake(user: UserAccountResponse, input: AnalyzeMistakeRequest): Promise<AnalyzeMistakeResponse>;
   importQuestionSource(user: UserAccountResponse, input: ImportQuestionSourceRequest): Promise<GeneratedQuestionSet>;
   importWebPage(user: UserAccountResponse, input: ImportWebPageRequest): Promise<GeneratedQuestionSet>;
   importWebPages(user: UserAccountResponse, input: ImportWebPagesRequest): Promise<ImportWebPagesResponse>;
+  importQuestionSourceCatalog(user: UserAccountResponse, input: ImportQuestionSourceCatalogRequest): Promise<ImportWebPagesResponse>;
   uploadQuestionAsset(user: UserAccountResponse, input: UploadQuestionAssetRequest): Promise<UploadedQuestionAsset>;
   generateSimilarQuestions(user: UserAccountResponse, questionId: string, count: number): Promise<GeneratedQuestionSet>;
   generateDailyPlan(user: UserAccountResponse, availableMinutes: number): Promise<StudyTask[]>;
@@ -94,6 +101,10 @@ export function createPrismaLearningRepository(prisma: PrismaClient, options: Cr
     const dbUser = await ensureLearningProfile(user);
     const profile = await readProfile(dbUser.id);
     return learningOverviewSchema.parse(profile);
+  }
+
+  async function readQuestionSourceCatalog() {
+    return getQuestionSourceCatalog();
   }
 
   async function analyzeMistake(user: UserAccountResponse, rawInput: AnalyzeMistakeRequest) {
@@ -260,6 +271,40 @@ export function createPrismaLearningRepository(prisma: PrismaClient, options: Cr
       } catch (error) {
         failed.push({
           url,
+          message: error instanceof Error ? error.message : "Import failed"
+        });
+      }
+    }
+
+    return { imports, failed };
+  }
+
+  async function importCatalogSources(user: UserAccountResponse, rawInput: ImportQuestionSourceCatalogRequest): Promise<ImportWebPagesResponse> {
+    const input = importQuestionSourceCatalogRequestSchema.parse(rawInput);
+    const imports: GeneratedQuestionSet[] = [];
+    const failed: ImportWebPagesResponse["failed"] = [];
+
+    for (const sourceId of input.sourceIds) {
+      const catalogItem = getQuestionSourceCatalogItem(sourceId);
+      if (!catalogItem) {
+        failed.push({
+          url: `https://catalog.local/${encodeURIComponent(sourceId)}`,
+          message: "Catalog source not found"
+        });
+        continue;
+      }
+
+      try {
+        imports.push(await importWebPage(user, {
+          url: catalogItem.url,
+          title: catalogItem.title,
+          provider: catalogItem.provider,
+          subject: catalogItem.subject,
+          knowledgePointId: catalogItem.knowledgePointId
+        }));
+      } catch (error) {
+        failed.push({
+          url: catalogItem.url,
           message: error instanceof Error ? error.message : "Import failed"
         });
       }
@@ -931,10 +976,12 @@ export function createPrismaLearningRepository(prisma: PrismaClient, options: Cr
 
   return {
     getOverview,
+    getQuestionSourceCatalog: readQuestionSourceCatalog,
     analyzeMistake,
     importQuestionSource,
     importWebPage,
     importWebPages,
+    importQuestionSourceCatalog: importCatalogSources,
     uploadQuestionAsset,
     generateSimilarQuestions: createSimilarQuestions,
     generateDailyPlan,
